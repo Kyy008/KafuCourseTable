@@ -1,0 +1,16 @@
+{
+  "name": "assignment-template",
+  "version": "1.0.0",
+  "description": "作业项目模板",
+  "scripts": {
+    "dev": "http-server src -o",
+    "check": "node tool/check.js",
+    "pack": "node tool/pack.js"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
