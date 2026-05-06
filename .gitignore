@@ -23,6 +23,9 @@ pnpm-debug.log*
 .env.*
 !.env.example
 
+# Local assignment metadata
+metadata.json
+
 # Editor and OS files
 .DS_Store
 Thumbs.db
