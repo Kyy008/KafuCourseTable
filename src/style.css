@@ -1,97 +1,344 @@
-/* ========================================
-   课程表网站 —— 样式文件
-   请在这里编写你的样式。
-   以下提供了基本的选择器骨架和注释引导，
-   你可以自由修改、扩展或完全重写。
-======================================== */
-
-
-/* ----------------------------------------
-   全局重置 & 基础样式
-   提示：设置 box-sizing、清除默认 margin/padding、
-        选择一个合适的 font-family
----------------------------------------- */
-/* TODO: 全局样式 */
-
-
-/* ----------------------------------------
-   页面标题 Header
-   提示：居中显示标题，设置背景色和内边距
----------------------------------------- */
-/* TODO: .header 样式 */
-
-
-/* ----------------------------------------
-   课程表 Timetable
-   提示：
-     - 使用 border-collapse: collapse 让表格边框合并
-     - 表头 <th> 设置背景色区分
-     - 每个单元格 .time-slot 设置固定的最小宽度和高度，
-       以便放入课程卡片
-     - 单元格需要 position: relative 使内部卡片可以定位
-     - 可以用 vertical-align: top 使内容顶部对齐
----------------------------------------- */
-/* TODO: .timetable 样式 */
-/* TODO: .timetable th, .timetable td 样式 */
-/* TODO: .time-slot 样式 */
-/* TODO: .time-label 样式 */
-
-
-/* ----------------------------------------
-   课程卡片 Course Card
-   提示：
-     - 设置背景色、圆角、内边距，使卡片看起来像一张小卡片
-     - 卡片内的科目名、老师、教室分行显示（flex-direction: column）
-     - 卡片被拖拽时可降低透明度（opacity）以提示用户
-     - 鼠标悬停时可添加阴影效果
-     - 删除按钮（×）使用 position: absolute 定位到卡片右上角
----------------------------------------- */
-/* TODO: .course-card 样式 */
-/* TODO: .course-card .course-name 样式 */
-/* TODO: .course-card .course-teacher 样式 */
-/* TODO: .course-card .course-room 样式 */
-/* TODO: .course-card .btn-delete 样式 */
-
-
-/* ----------------------------------------
-   拖拽相关样式
-   提示：
-     - 拖拽中：给卡片加 opacity: 0.5 表示正在拖拽
-     - 拖拽悬停：给目标单元格加高亮背景色，提示用户可以放置
-     - 可以通过 JS 在 dragenter/dragleave 时添加/移除 CSS 类名
----------------------------------------- */
-/* 示例：
-.course-card.dragging {
-  opacity: 0.5;
+:root {
+  --bg: #f6f7f8;
+  --surface: #ffffff;
+  --text: #242424;
+  --muted: #8b8f95;
+  --line: #e7e8ea;
+  --dash: #dedfe3;
+  --active: #111111;
+  --blue: #4c95d9;
+  --blue-bg: #edf4ff;
+  --purple: #6965b5;
+  --purple-bg: #f0edff;
+  --green: #3d9472;
+  --green-bg: #eaf7f0;
+  --orange: #b97335;
+  --orange-bg: #fff0e3;
+  --rose: #b65a6c;
+  --rose-bg: #fff0f3;
 }
 
-.time-slot.drag-over {
-  background-color: #e0f7fa;
-  border: 2px dashed #00acc1;
+* {
+  box-sizing: border-box;
 }
-*/
 
-
-/* ----------------------------------------
-   操作面板（添加 & 查询）
-   提示：
-     - .panel 区域包含表单，建议放在课程表下方或侧边
-     - 表单内的 label + input 使用 flex 或 grid 排列
-     - 按钮设置醒目的背景色
-     - 查询结果区域 .search-results 设置合适的样式
----------------------------------------- */
-/* TODO: .panel 样式 */
-/* TODO: #add-course-form 内部布局 */
-/* TODO: .search-group 样式 */
-/* TODO: .search-results 样式 */
-
-
-/* ----------------------------------------
-   响应式设计（可选加分项）
-   提示：当屏幕较窄时，课程表可以横向滚动
----------------------------------------- */
-/* 示例：
-.timetable-container {
-  overflow-x: auto;
+body {
+  margin: 0;
+  min-width: 960px;
+  color: var(--text);
+  background:
+    linear-gradient(180deg, #ffffff 0%, var(--bg) 72%),
+    var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", sans-serif;
 }
-*/
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(1160px, calc(100vw - 96px));
+  margin: 0 auto;
+  padding: 34px 0 44px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ghost-button,
+.primary-button {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.ghost-button {
+  color: #34373b;
+  background: var(--surface);
+}
+
+.primary-button {
+  color: #ffffff;
+  border-color: var(--active);
+  background: var(--active);
+}
+
+.week-panel {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 18px 50px rgba(35, 39, 47, 0.08);
+}
+
+.schedule-board {
+  display: grid;
+  grid-template-rows: 46px 84px auto;
+  background: var(--surface);
+}
+
+.week-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #575b61;
+  font-size: 16px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--line);
+}
+
+.weekday-row {
+  display: grid;
+  grid-template-columns: 86px repeat(7, minmax(104px, 1fr));
+  border-bottom: 1px solid var(--line);
+}
+
+.month-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2d2f33;
+  font-size: 20px;
+  font-weight: 760;
+}
+
+.weekday-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.weekday-name {
+  color: #2d2f33;
+  font-size: 23px;
+  font-weight: 760;
+  line-height: 1;
+}
+
+.date-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: #8c8f93;
+  font-size: 23px;
+  font-weight: 700;
+  border-radius: 8px;
+}
+
+.weekday-cell.is-active .date-number {
+  color: #ffffff;
+  background: var(--active);
+  box-shadow: 0 8px 18px rgba(17, 17, 17, 0.18);
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 86px repeat(7, minmax(104px, 1fr));
+}
+
+.time-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 116px;
+  padding: 18px 8px 14px 24px;
+  color: #56595d;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px dashed var(--dash);
+  cursor: pointer;
+  text-align: left;
+}
+
+.period-number {
+  margin-bottom: 15px;
+  font-size: 25px;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.period-time {
+  display: block;
+  color: #8d9196;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.7;
+}
+
+.schedule-slot {
+  position: relative;
+  min-height: 116px;
+  padding: 9px 7px;
+  border-bottom: 2px dashed var(--dash);
+  transition: background 0.18s ease;
+}
+
+.schedule-slot:hover {
+  background: #f0f2f4;
+}
+
+.schedule-slot::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: #2d2f33;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1;
+  background: #ffffff;
+  border: 1px dashed transparent;
+  border-radius: 50%;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.schedule-slot:hover::after {
+  border-color: #8f969e;
+  box-shadow: 0 8px 18px rgba(35, 39, 47, 0.16);
+  content: "+";
+  opacity: 1;
+}
+
+.course-card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 96px;
+  padding: 16px 14px 12px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--purple-bg);
+  color: var(--purple);
+  cursor: grab;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.course-card::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 12px;
+  background: rgba(105, 101, 181, 0.26);
+  content: "";
+}
+
+.course-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(35, 39, 47, 0.1);
+}
+
+.course-title {
+  font-size: 18px;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.course-meta {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.45;
+  opacity: 0.88;
+}
+
+.course-card[data-color="blue"] {
+  color: var(--blue);
+  background: var(--blue-bg);
+}
+
+.course-card[data-color="blue"]::before {
+  background: rgba(76, 149, 217, 0.22);
+}
+
+.course-card[data-color="green"] {
+  color: var(--green);
+  background: var(--green-bg);
+}
+
+.course-card[data-color="green"]::before {
+  background: rgba(61, 148, 114, 0.22);
+}
+
+.course-card[data-color="orange"] {
+  color: var(--orange);
+  background: var(--orange-bg);
+}
+
+.course-card[data-color="orange"]::before {
+  background: rgba(185, 115, 53, 0.22);
+}
+
+.course-card[data-color="rose"] {
+  color: var(--rose);
+  background: var(--rose-bg);
+}
+
+.course-card[data-color="rose"]::before {
+  background: rgba(182, 90, 108, 0.2);
+}
+
+@media (max-width: 1180px) {
+  body {
+    min-width: 900px;
+  }
+
+  .app-shell {
+    width: calc(100vw - 48px);
+  }
+
+  .weekday-row,
+  .schedule-grid {
+    grid-template-columns: 82px repeat(7, minmax(96px, 1fr));
+  }
+
+  .time-axis,
+  .schedule-slot {
+    min-height: 108px;
+  }
+}

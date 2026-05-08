@@ -3,224 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 你可以修改页面标题 -->
   <title>我的课程表</title>
-  <!-- 引入样式表，不要修改此路径 -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=main-empty">
 </head>
 <body>
-  <!--
-    欢迎来到第二次作业模板！
-    本次作业要求制作一个「课程表」网站，支持以下功能：
-      1. 添加科目（科目名称、老师、教室）—— 表单
-      2. 删除科目（× 按钮）
-      3. 拖拽科目（挪动到另一个时间段）—— HTML5 拖拽 API
-      4. 查询：科目所在时间 —— 表单
-      5. 查询：当日教室行程 —— 表单
-      6. 数据持久化 —— LocalStorage
+  <main class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Kafu Course Table</p>
+        <h1>我的课程表</h1>
+      </div>
+      <div class="header-actions" aria-label="课程表操作">
+        <button class="ghost-button" type="button">查询</button>
+        <button class="primary-button" type="button">添加课程</button>
+      </div>
+    </header>
 
-    以下 HTML 结构仅供参考，你可以完全按照自己的想法设计。
-    请将所有样式写在 style.css 中，所有脚本写在 <script> 标签或单独的 JS 文件中。
-  -->
+    <section class="week-panel" aria-label="本周课程表">
+      <div class="schedule-board">
+        <div class="week-title">第 13 周</div>
+        <div class="weekday-row" id="weekday-row"></div>
+        <div class="schedule-grid" id="schedule-grid"></div>
+      </div>
+    </section>
+  </main>
 
-
-  <!-- =============================================
-    页面标题 Header
-    提示：展示课程表应用名称即可，可自行添加功能入口
-  ============================================= -->
-  <header class="header">
-    <h1>📅 我的课程表</h1>
-  </header>
-
-
-  <!-- =============================================
-    课程表主体 Timetable
-    要求：以表格形式展示一周的课程安排
-    结构：行 = 时间段（第 1-8 节），列 = 星期一 ~ 星期日
-    提示：
-      - 使用 <table> 或 CSS Grid 均可
-      - 每个单元格是一个「时间槽」，可以放入课程卡片
-      - 单元格需要支持 拖拽放置（drop），请设置相应的
-        ondragover / ondrop 事件（或用 addEventListener）
-      - 课程卡片需要支持 拖拽开始（dragstart），请设置
-        draggable="true" 和 ondragstart 事件
-  ============================================= -->
-  <section class="timetable-container">
-    <table class="timetable" id="timetable">
-      <thead>
-        <tr>
-          <th>时间</th>
-          <th>周一</th>
-          <th>周二</th>
-          <th>周三</th>
-          <th>周四</th>
-          <th>周五</th>
-          <!-- 如果需要周末，可以取消下面的注释 -->
-          <!-- <th>周六</th> -->
-          <!-- <th>周日</th> -->
-        </tr>
-      </thead>
-      <tbody>
-        <!--
-          TODO: 生成课程表的行（第 1 节 ~ 第 8 节）
-          每一行的结构如下，你可以手写 HTML，也可以用 JS 动态生成：
-
-          <tr>
-            <td class="time-label">第 1 节</td>
-            <td class="time-slot" data-day="1" data-period="1"></td>
-            <td class="time-slot" data-day="2" data-period="1"></td>
-            <td class="time-slot" data-day="3" data-period="1"></td>
-            <td class="time-slot" data-day="4" data-period="1"></td>
-            <td class="time-slot" data-day="5" data-period="1"></td>
-          </tr>
-
-          说明：
-          - data-day：星期几（1=周一, 2=周二, ...）
-          - data-period：第几节课（1~8）
-          - class="time-slot" 用于标识可放置课程的单元格
-        -->
-      </tbody>
-    </table>
-  </section>
-
-
-  <!-- =============================================
-    添加科目表单 Add Course Form
-    要求：包含科目名称、老师、教室三个输入项，
-          以及选择「星期几」和「第几节课」的下拉框，
-          最后有一个「添加」按钮
-    提示：
-      - 使用 <form> 包裹，监听 submit 事件
-      - 在 JS 中获取表单数据，创建课程卡片并插入对应的单元格
-      - 同时将数据保存到 LocalStorage
-  ============================================= -->
-  <section class="panel" id="add-panel">
-    <h2>➕ 添加科目</h2>
-    <form id="add-course-form">
-      <!--
-        TODO: 完成表单内容，以下是参考结构：
-
-        <label>科目名称
-          <input type="text" id="course-name" placeholder="例：高等数学" required>
-        </label>
-
-        <label>授课老师
-          <input type="text" id="course-teacher" placeholder="例：张老师" required>
-        </label>
-
-        <label>教室
-          <input type="text" id="course-room" placeholder="例：A201" required>
-        </label>
-
-        <label>星期
-          <select id="course-day" required>
-            <option value="">请选择</option>
-            <option value="1">周一</option>
-            <option value="2">周二</option>
-            <option value="3">周三</option>
-            <option value="4">周四</option>
-            <option value="5">周五</option>
-          </select>
-        </label>
-
-        <label>节次
-          <select id="course-period" required>
-            <option value="">请选择</option>
-            <option value="1">第 1 节</option>
-            <option value="2">第 2 节</option>
-            ...
-            <option value="8">第 8 节</option>
-          </select>
-        </label>
-
-        <button type="submit">添加课程</button>
-      -->
-    </form>
-  </section>
-
-
-  <!-- =============================================
-    查询功能区 Search Panel
-    要求 1：输入科目名称，查出该科目在哪些时间段上课
-    要求 2：选择星期几，查出当天所有教室的使用情况
-    提示：
-      - 可以做成两个独立的小表单
-      - 查询结果展示在下方的结果区域中
-      - 数据来源：从 LocalStorage 读取已保存的课程数据
-  ============================================= -->
-  <section class="panel" id="search-panel">
-    <h2>🔍 查询</h2>
-
-    <!-- 查询 1：科目所在时间 -->
-    <div class="search-group">
-      <h3>按科目查询时间</h3>
-      <!--
-        TODO: 完成查询表单，参考结构：
-
-        <form id="search-by-name-form">
-          <input type="text" id="search-name" placeholder="输入科目名称" required>
-          <button type="submit">查询</button>
-        </form>
-      -->
-    </div>
-
-    <!-- 查询 2：当日教室行程 -->
-    <div class="search-group">
-      <h3>按日期查询教室行程</h3>
-      <!--
-        TODO: 完成查询表单，参考结构：
-
-        <form id="search-by-day-form">
-          <select id="search-day" required>
-            <option value="">请选择星期</option>
-            <option value="1">周一</option>
-            <option value="2">周二</option>
-            ...
-            <option value="5">周五</option>
-          </select>
-          <button type="submit">查询</button>
-        </form>
-      -->
-    </div>
-
-    <!-- 查询结果展示区 -->
-    <div class="search-results" id="search-results">
-      <!-- 查询结果将在这里动态展示 -->
-    </div>
-  </section>
-
-
-  <!-- =============================================
-    课程卡片模板（参考）
-    说明：以下是一个课程卡片的 HTML 结构示例，
-          你需要在 JS 中动态创建类似结构并插入到课程表单元格中。
-    注意：
-      - draggable="true" 使卡片可拖拽
-      - data-id 用于标识课程，方便拖拽和删除时定位
-      - 删除按钮（×）点击后应从 DOM 和 LocalStorage 中移除该课程
-
-    <div class="course-card" draggable="true" data-id="唯一ID">
-      <span class="course-name">高等数学</span>
-      <span class="course-teacher">张老师</span>
-      <span class="course-room">A201</span>
-      <button class="btn-delete" title="删除此课程">×</button>
-    </div>
-  ============================================= -->
-
-
-  <!-- =============================================
-    JavaScript 脚本
-    说明：核心逻辑写在独立的 app.js 文件中，
-          请勿将 JS 代码写在 HTML 内的 <script> 标签里。
-    核心功能清单：
-      1. 页面加载时从 LocalStorage 读取数据并渲染课程表
-      2. 添加课程：表单提交 → 创建课程对象 → 存入 LocalStorage → 渲染卡片到对应单元格
-      3. 删除课程：点击 × → 从 DOM 移除卡片 → 从 LocalStorage 删除
-      4. 拖拽课程：dragstart 记录课程 ID → dragover 允许放置 → drop 移动卡片到新单元格 → 更新 LocalStorage
-      5. 查询科目时间：遍历 LocalStorage 中的课程，筛选匹配的科目名称
-      6. 查询教室行程：遍历 LocalStorage 中的课程，筛选匹配的星期
-  ============================================= -->
-  <script src="app.js"></script>
-
+  <script src="app.js?v=main-empty"></script>
 </body>
 </html>

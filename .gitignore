@@ -25,6 +25,7 @@ pnpm-debug.log*
 
 # Local assignment metadata
 metadata.json
+plan.md
 
 # Editor and OS files
 .DS_Store
