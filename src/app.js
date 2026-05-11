@@ -93,8 +93,41 @@ function getRandomCourseColor() {
   return courseColors[Math.floor(Math.random() * courseColors.length)];
 }
 
-function openModal(modal) {
+function openModal(modal, sourceElement) {
   modal.hidden = false;
+  modal.classList.remove("modal-fade-in");
+
+  const dialog = modal.querySelector(".course-editor, .week-picker, .confirm-dialog");
+
+  if (!dialog) {
+    return;
+  }
+
+  dialog.classList.remove("modal-grow-from-cell");
+  dialog.style.removeProperty("--modal-start-x");
+  dialog.style.removeProperty("--modal-start-y");
+
+  if (!sourceElement) {
+    return;
+  }
+
+  void modal.offsetWidth;
+  modal.classList.add("modal-fade-in");
+
+  const sourceRect = sourceElement.getBoundingClientRect();
+  const dialogRect = dialog.getBoundingClientRect();
+  const sourceCenterX = sourceRect.left + sourceRect.width / 2;
+  const sourceCenterY = sourceRect.top + sourceRect.height / 2;
+  const dialogCenterX = dialogRect.left + dialogRect.width / 2;
+  const dialogCenterY = dialogRect.top + dialogRect.height / 2;
+
+  dialog.style.setProperty("--modal-start-x", `${sourceCenterX - dialogCenterX}px`);
+  dialog.style.setProperty("--modal-start-y", `${sourceCenterY - dialogCenterY}px`);
+  void dialog.offsetWidth;
+  dialog.classList.add("modal-grow-from-cell");
+  dialog.addEventListener("animationend", () => {
+    dialog.classList.remove("modal-grow-from-cell");
+  }, { once: true });
 }
 
 function closeModal(modal) {
@@ -180,11 +213,11 @@ function setWeekMode(mode) {
   renderWeekPicker();
 }
 
-function openCourseEditor(day, period) {
+function openCourseEditor(day, period, sourceElement) {
   activeSlot = { day, period };
   resetCourseForm();
   resetWeekSelection();
-  openModal(courseModal);
+  openModal(courseModal, sourceElement);
   courseNameInput.focus();
 }
 
@@ -198,6 +231,11 @@ function openDeleteConfirm(courseId) {
   pendingDeleteCourseId = courseId;
   deleteMessage.textContent = `确定要删除「${course.name}」吗？删除后该课程将从课程表中移除。`;
   openModal(deleteModal);
+  deleteModal.classList.remove("confirm-fade-in");
+  deleteModal.querySelector(".confirm-dialog").classList.remove("confirm-pop-in");
+  void deleteModal.offsetWidth;
+  deleteModal.classList.add("confirm-fade-in");
+  deleteModal.querySelector(".confirm-dialog").classList.add("confirm-pop-in");
 }
 
 function deletePendingCourse() {
@@ -380,7 +418,7 @@ scheduleGrid.addEventListener("click", (event) => {
     return;
   }
 
-  openCourseEditor(Number(slot.dataset.day), Number(slot.dataset.period));
+  openCourseEditor(Number(slot.dataset.day), Number(slot.dataset.period), slot);
 });
 
 scheduleGrid.addEventListener("dragstart", (event) => {
