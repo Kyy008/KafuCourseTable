@@ -14,8 +14,8 @@
         <h1>我的课程表</h1>
       </div>
       <div class="header-actions" aria-label="课程表操作">
-        <button class="ghost-button" type="button">查询</button>
-        <button class="primary-button" type="button">添加课程</button>
+        <button class="ghost-button" id="open-course-query" type="button">查询科目时间</button>
+        <button class="primary-button" id="open-day-query" type="button">查询当日行程</button>
       </div>
     </header>
 
@@ -79,6 +79,60 @@
       </div>
 
       <div class="week-grid" id="week-grid" aria-label="周数列表"></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="course-query-modal" hidden>
+    <section class="course-editor query-panel" role="dialog" aria-modal="true" aria-labelledby="course-query-title">
+      <header class="modal-header">
+        <button class="text-button" id="course-query-cancel" type="button">取消</button>
+        <h2 id="course-query-title">查询科目时间</h2>
+        <button class="text-button accent" id="course-query-submit" type="button">查询</button>
+      </header>
+
+      <form class="course-form query-form">
+        <label class="form-row">
+          <span>课程名称</span>
+          <input id="course-query-name" type="text" placeholder="请输入要查询的课程名称" autocomplete="off">
+        </label>
+      </form>
+
+      <div class="query-results" id="course-query-results" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="day-query-modal" hidden>
+    <section class="course-editor query-panel day-query-panel" role="dialog" aria-modal="true" aria-labelledby="day-query-title">
+      <header class="modal-header">
+        <button class="text-button" id="day-query-cancel" type="button">取消</button>
+        <h2 id="day-query-title">查询当日行程</h2>
+        <button class="text-button accent" id="day-query-submit" type="button">查询</button>
+      </header>
+
+      <form class="course-form query-form">
+        <div class="day-query-block">
+          <div class="day-query-heading">
+            <span>选择日期</span>
+          </div>
+          <div class="day-query-week-control" aria-label="选择查询周数">
+            <button class="week-step day-query-week-step" id="day-query-week-prev" type="button" aria-label="上一周">‹</button>
+            <strong id="day-query-week-label">第 11 周</strong>
+            <button class="week-step day-query-week-step" id="day-query-week-next" type="button" aria-label="下一周">›</button>
+          </div>
+          <p class="day-query-date" id="day-query-date">星期六 · 5月9日</p>
+          <div class="day-query-days" aria-label="选择星期">
+            <button class="day-query-day" data-day="1" type="button">一</button>
+            <button class="day-query-day" data-day="2" type="button">二</button>
+            <button class="day-query-day" data-day="3" type="button">三</button>
+            <button class="day-query-day" data-day="4" type="button">四</button>
+            <button class="day-query-day" data-day="5" type="button">五</button>
+            <button class="day-query-day is-selected" data-day="6" type="button">六</button>
+            <button class="day-query-day" data-day="7" type="button">日</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="query-results" id="day-query-results" aria-live="polite"></div>
     </section>
   </div>
 

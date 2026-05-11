@@ -917,6 +917,10 @@ h1 {
   padding: 0 34px 18px;
 }
 
+.query-panel {
+  padding-bottom: 32px;
+}
+
 .modal-header {
   display: grid;
   grid-template-columns: 96px 1fr 96px;
@@ -1001,6 +1005,152 @@ h1 {
   margin-left: 16px;
   color: #9ba0a6;
   content: ">";
+}
+
+.query-results {
+  display: grid;
+  gap: 12px;
+  padding-top: 18px;
+}
+
+.query-results.is-updated {
+  animation: queryResultsRise 220ms ease-out both;
+}
+
+.query-empty {
+  margin: 0;
+  padding: 26px 18px;
+  color: #858a91;
+  background: #f4f5f7;
+  border: 1px dashed #d9dce0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 650;
+  text-align: center;
+}
+
+.query-result-card {
+  display: grid;
+  gap: 7px;
+  padding: 16px 18px 15px;
+  background: #f8fafb;
+  border: 1px solid #e2e5e8;
+  border-left: 6px solid #8da6d8;
+  border-radius: 8px;
+}
+
+.query-result-card h3,
+.query-result-card p {
+  margin: 0;
+}
+
+.query-result-card h3 {
+  color: #30363b;
+  font-size: 18px;
+  font-weight: 780;
+}
+
+.query-result-meta {
+  color: #5f666d;
+  font-size: 15px;
+  font-weight: 680;
+}
+
+.query-result-detail {
+  color: #8a9096;
+  font-size: 14px;
+  font-weight: 620;
+}
+
+.day-query-block {
+  padding: 24px 0 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.day-query-heading {
+  margin-bottom: 14px;
+}
+
+.day-query-heading span {
+  display: block;
+  color: #2d2f33;
+  font-size: 25px;
+  font-weight: 780;
+  text-align: center;
+}
+
+.day-query-week-control {
+  display: grid;
+  grid-template-columns: 36px minmax(112px, auto) 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.day-query-week-control strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 112px;
+  color: #5f6369;
+  font-size: 22px;
+  font-weight: 760;
+  text-align: center;
+}
+
+.day-query-week-step {
+  width: 32px;
+  height: 32px;
+}
+
+.day-query-date {
+  margin: 0 0 22px;
+  color: #8a9096;
+  font-size: 18px;
+  font-weight: 680;
+  text-align: center;
+}
+
+.day-query-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.day-query-day {
+  height: 54px;
+  color: #666b72;
+  background: #f0f2f4;
+  border: 1px solid #e0e3e6;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 760;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.day-query-day:hover {
+  transform: translateY(-1px);
+}
+
+.day-query-day.is-selected {
+  color: #ffffff;
+  background: var(--active);
+  border-color: var(--active);
+  box-shadow: 0 10px 22px rgba(17, 17, 17, 0.18);
+}
+
+@keyframes queryResultsRise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .week-picker {

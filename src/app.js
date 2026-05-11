@@ -25,7 +25,11 @@ const scheduleGrid = document.querySelector("#schedule-grid");
 const currentWeekLabel = document.querySelector("#current-week-label");
 const weekPrevButton = document.querySelector("#week-prev");
 const weekNextButton = document.querySelector("#week-next");
+const openCourseQueryButton = document.querySelector("#open-course-query");
+const openDayQueryButton = document.querySelector("#open-day-query");
 const courseModal = document.querySelector("#course-modal");
+const courseQueryModal = document.querySelector("#course-query-modal");
+const dayQueryModal = document.querySelector("#day-query-modal");
 const weekModal = document.querySelector("#week-modal");
 const deleteModal = document.querySelector("#delete-modal");
 const deleteMessage = document.querySelector("#delete-message");
@@ -37,6 +41,18 @@ const courseTeacherInput = document.querySelector("#course-teacher");
 const courseForm = document.querySelector(".course-form");
 const courseCancelButton = document.querySelector("#course-cancel");
 const courseDoneButton = document.querySelector("#course-done");
+const courseQueryNameInput = document.querySelector("#course-query-name");
+const courseQueryCancelButton = document.querySelector("#course-query-cancel");
+const courseQuerySubmitButton = document.querySelector("#course-query-submit");
+const courseQueryResults = document.querySelector("#course-query-results");
+const dayQueryCancelButton = document.querySelector("#day-query-cancel");
+const dayQuerySubmitButton = document.querySelector("#day-query-submit");
+const dayQueryResults = document.querySelector("#day-query-results");
+const dayQueryWeekPrevButton = document.querySelector("#day-query-week-prev");
+const dayQueryWeekNextButton = document.querySelector("#day-query-week-next");
+const dayQueryWeekLabel = document.querySelector("#day-query-week-label");
+const dayQueryDate = document.querySelector("#day-query-date");
+const dayQueryDayButtons = document.querySelectorAll(".day-query-day");
 const openWeekPickerButton = document.querySelector("#open-week-picker");
 const weekCancelButton = document.querySelector("#week-cancel");
 const weekDoneButton = document.querySelector("#week-done");
@@ -55,6 +71,8 @@ let activeSlot = { day: 1, period: 1 };
 let draggingCourseId = "";
 let pendingDeleteCourseId = "";
 let scheduleAnimationTimer = 0;
+let selectedDayQueryDay = weekdays.find((weekday) => weekday.active)?.day || 1;
+let selectedDayQueryWeek = currentWeek;
 
 function normalizeCourse(course) {
   const weeks = getCourseWeeks(course);
@@ -97,6 +115,16 @@ function getWeekdayName(day) {
 
 function getPeriod(period) {
   return periods.find((item) => item.period === period);
+}
+
+function getPeriodText(periodNumber) {
+  const period = getPeriod(periodNumber);
+
+  if (!period) {
+    return `第 ${periodNumber} 节`;
+  }
+
+  return `第 ${period.period} 节 ${period.start}-${period.end}`;
 }
 
 function getRandomCourseColor() {
@@ -207,6 +235,181 @@ function switchWeek(direction) {
   renderWeekdays(direction);
   renderSchedule();
   animateScheduleCards(direction);
+}
+
+function openCourseQuery() {
+  courseQueryNameInput.value = "";
+  courseQueryResults.innerHTML = "";
+  courseQueryResults.classList.remove("is-updated");
+  openModal(courseQueryModal, openCourseQueryButton);
+  courseQueryNameInput.focus();
+}
+
+function renderCourseQueryMessage(message) {
+  courseQueryResults.innerHTML = "";
+
+  const empty = document.createElement("p");
+  empty.className = "query-empty";
+  empty.textContent = message;
+  courseQueryResults.appendChild(empty);
+}
+
+function createCourseQueryResult(course) {
+  const item = document.createElement("article");
+  item.className = "query-result-card";
+  item.dataset.color = course.color;
+
+  const title = document.createElement("h3");
+  title.textContent = course.name;
+
+  const meta = document.createElement("p");
+  meta.className = "query-result-meta";
+  meta.textContent = `${course.weeksText} · 星期${getWeekdayName(course.day)} · ${getPeriodText(course.period)}`;
+
+  const detail = document.createElement("p");
+  detail.className = "query-result-detail";
+  const roomText = course.room || "未填写教室";
+  const teacherText = course.teacher || "未填写老师";
+  detail.textContent = `${roomText} / ${teacherText}`;
+
+  item.append(title, meta, detail);
+  return item;
+}
+
+function queryCourseTime() {
+  const keyword = courseQueryNameInput.value.trim();
+
+  if (!keyword) {
+    renderCourseQueryMessage("请输入课程名称。");
+    courseQueryNameInput.focus();
+    return;
+  }
+
+  const results = courses
+    .filter((course) => course.name.includes(keyword))
+    .sort((a, b) => a.day - b.day || a.period - b.period);
+
+  courseQueryResults.innerHTML = "";
+  courseQueryResults.classList.remove("is-updated");
+  void courseQueryResults.offsetWidth;
+  courseQueryResults.classList.add("is-updated");
+
+  if (results.length === 0) {
+    renderCourseQueryMessage(`没有找到「${keyword}」的课程安排。`);
+    return;
+  }
+
+  results.forEach((course) => {
+    courseQueryResults.appendChild(createCourseQueryResult(course));
+  });
+}
+
+function getDayQueryDateText(day) {
+  const date = getWeekDates(selectedDayQueryWeek)[day - 1];
+  return `${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
+function updateDayQueryDisplay(direction) {
+  dayQueryWeekLabel.textContent = `第 ${selectedDayQueryWeek} 周`;
+  dayQueryWeekPrevButton.disabled = selectedDayQueryWeek === 1;
+  dayQueryWeekNextButton.disabled = selectedDayQueryWeek === totalWeeks;
+  dayQueryDate.textContent = `星期${getWeekdayName(selectedDayQueryDay)} · ${getDayQueryDateText(selectedDayQueryDay)}`;
+
+  if (!direction) {
+    return;
+  }
+
+  dayQueryWeekLabel.classList.remove("week-label-slide-left", "week-label-slide-right");
+  dayQueryDate.classList.remove("week-label-slide-left", "week-label-slide-right");
+  void dayQueryWeekLabel.offsetWidth;
+  const animationClass = direction === "next" ? "week-label-slide-left" : "week-label-slide-right";
+  dayQueryWeekLabel.classList.add(animationClass);
+  dayQueryDate.classList.add(animationClass);
+}
+
+function clearDayQueryResults() {
+  dayQueryResults.innerHTML = "";
+  dayQueryResults.classList.remove("is-updated");
+}
+
+function updateDayQuerySelection(day, direction) {
+  selectedDayQueryDay = Number(day);
+  dayQueryDayButtons.forEach((button) => {
+    button.classList.toggle("is-selected", Number(button.dataset.day) === selectedDayQueryDay);
+  });
+  updateDayQueryDisplay(direction);
+}
+
+function changeDayQueryWeek(direction) {
+  const nextWeek = direction === "next" ? selectedDayQueryWeek + 1 : selectedDayQueryWeek - 1;
+
+  if (nextWeek < 1 || nextWeek > totalWeeks) {
+    return;
+  }
+
+  selectedDayQueryWeek = nextWeek;
+  updateDayQueryDisplay(direction);
+  clearDayQueryResults();
+}
+
+function openDayQuery() {
+  selectedDayQueryWeek = currentWeek;
+  updateDayQuerySelection(selectedDayQueryDay);
+  clearDayQueryResults();
+  openModal(dayQueryModal, openDayQueryButton);
+}
+
+function renderDayQueryMessage(message) {
+  dayQueryResults.innerHTML = "";
+
+  const empty = document.createElement("p");
+  empty.className = "query-empty";
+  empty.textContent = message;
+  dayQueryResults.appendChild(empty);
+}
+
+function createDayQueryResult(course) {
+  const item = document.createElement("article");
+  item.className = "query-result-card";
+  item.dataset.color = course.color;
+
+  const title = document.createElement("h3");
+  title.textContent = getPeriodText(course.period);
+
+  const meta = document.createElement("p");
+  meta.className = "query-result-meta";
+  const roomText = course.room || "未填写教室";
+  meta.textContent = `${course.name} · ${roomText}`;
+
+  const detail = document.createElement("p");
+  detail.className = "query-result-detail";
+  const teacherText = course.teacher || "未填写老师";
+  detail.textContent = `${teacherText} · ${course.weeksText}`;
+
+  item.append(title, meta, detail);
+  return item;
+}
+
+function queryDaySchedule() {
+  const results = courses
+    .filter((course) => {
+      return course.day === selectedDayQueryDay && course.weeks.includes(selectedDayQueryWeek);
+    })
+    .sort((a, b) => a.period - b.period);
+
+  dayQueryResults.innerHTML = "";
+  dayQueryResults.classList.remove("is-updated");
+  void dayQueryResults.offsetWidth;
+  dayQueryResults.classList.add("is-updated");
+
+  if (results.length === 0) {
+    renderDayQueryMessage(`第 ${selectedDayQueryWeek} 周 星期${getWeekdayName(selectedDayQueryDay)}没有课程安排。`);
+    return;
+  }
+
+  results.forEach((course) => {
+    dayQueryResults.appendChild(createDayQueryResult(course));
+  });
 }
 
 function openModal(modal, sourceElement) {
@@ -549,6 +752,8 @@ renderWeekPicker();
 
 weekPrevButton.addEventListener("click", () => switchWeek("prev"));
 weekNextButton.addEventListener("click", () => switchWeek("next"));
+openCourseQueryButton.addEventListener("click", openCourseQuery);
+openDayQueryButton.addEventListener("click", openDayQuery);
 
 scheduleGrid.addEventListener("click", (event) => {
   if (event.target.closest(".course-card")) {
@@ -638,6 +843,24 @@ scheduleGrid.addEventListener("dragend", clearDragState);
 
 courseCancelButton.addEventListener("click", () => closeModal(courseModal));
 courseForm.addEventListener("submit", (event) => event.preventDefault());
+courseQueryCancelButton.addEventListener("click", () => closeModal(courseQueryModal));
+courseQuerySubmitButton.addEventListener("click", queryCourseTime);
+courseQueryNameInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    queryCourseTime();
+  }
+});
+dayQueryCancelButton.addEventListener("click", () => closeModal(dayQueryModal));
+dayQuerySubmitButton.addEventListener("click", queryDaySchedule);
+dayQueryWeekPrevButton.addEventListener("click", () => changeDayQueryWeek("prev"));
+dayQueryWeekNextButton.addEventListener("click", () => changeDayQueryWeek("next"));
+dayQueryDayButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    updateDayQuerySelection(button.dataset.day);
+    clearDayQueryResults();
+  });
+});
 courseDoneButton.addEventListener("click", () => {
   const courseName = courseNameInput.value.trim() || "未命名课程";
 
@@ -678,6 +901,18 @@ courseModal.addEventListener("click", (event) => {
 weekModal.addEventListener("click", (event) => {
   if (event.target === weekModal) {
     closeModal(weekModal);
+  }
+});
+
+courseQueryModal.addEventListener("click", (event) => {
+  if (event.target === courseQueryModal) {
+    closeModal(courseQueryModal);
+  }
+});
+
+dayQueryModal.addEventListener("click", (event) => {
+  if (event.target === dayQueryModal) {
+    closeModal(dayQueryModal);
   }
 });
 
@@ -732,5 +967,7 @@ document.addEventListener("keydown", (event) => {
   closeModal(weekModal);
   closeModal(deleteModal);
   closeModal(courseModal);
+  closeModal(courseQueryModal);
+  closeModal(dayQueryModal);
   pendingDeleteCourseId = "";
 });
