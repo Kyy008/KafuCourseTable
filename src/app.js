@@ -33,6 +33,7 @@ const dayQueryModal = document.querySelector("#day-query-modal");
 const weekModal = document.querySelector("#week-modal");
 const deleteModal = document.querySelector("#delete-modal");
 const deleteMessage = document.querySelector("#delete-message");
+const courseEditorTitle = document.querySelector("#course-editor-title");
 const weekSummary = document.querySelector("#week-summary");
 const weekGrid = document.querySelector("#week-grid");
 const courseNameInput = document.querySelector("#course-name");
@@ -68,6 +69,7 @@ const courseColors = Array.from({ length: 15 }, (_, index) => `card-${index + 1}
 const courses = loadCourses();
 let currentWeek = initialWeek;
 let activeSlot = { day: 1, period: 1 };
+let editingCourseId = "";
 let draggingCourseId = "";
 let pendingDeleteCourseId = "";
 let scheduleAnimationTimer = 0;
@@ -488,6 +490,37 @@ function resetWeekSelection() {
   renderWeekPicker();
 }
 
+function updateWeekModeState() {
+  const weeks = [...selectedWeeks].sort((a, b) => a - b);
+  const allWeeks = getAllWeeks();
+  const oddWeeks = allWeeks.filter((week) => week % 2 === 1);
+  const evenWeeks = allWeeks.filter((week) => week % 2 === 0);
+  const isSameWeeks = (targetWeeks) => {
+    return weeks.length === targetWeeks.length && weeks.every((week, index) => week === targetWeeks[index]);
+  };
+  let activeMode = "";
+
+  if (isSameWeeks(allWeeks)) {
+    activeMode = "all";
+  } else if (isSameWeeks(oddWeeks)) {
+    activeMode = "odd";
+  } else if (isSameWeeks(evenWeeks)) {
+    activeMode = "even";
+  }
+
+  weekModeButtons.forEach((button) => {
+    button.classList.toggle("is-selected", button.dataset.mode === activeMode);
+  });
+}
+
+function setSelectedWeeks(weeks) {
+  selectedWeeks.clear();
+  normalizeWeeks(weeks).forEach((week) => selectedWeeks.add(week));
+  updateWeekSummary();
+  updateWeekModeState();
+  renderWeekPicker();
+}
+
 function getSelectedWeeksText() {
   return getWeeksText([...selectedWeeks]);
 }
@@ -523,10 +556,33 @@ function setWeekMode(mode) {
 
 function openCourseEditor(day, period, sourceElement) {
   activeSlot = { day, period };
+  editingCourseId = "";
+  courseEditorTitle.textContent = "添加课程";
+  courseDoneButton.textContent = "完成";
   resetCourseForm();
   resetWeekSelection();
   openModal(courseModal, sourceElement);
   courseNameInput.focus();
+}
+
+function openCourseEditorForCourse(courseId, sourceElement) {
+  const course = courses.find((item) => item.id === courseId);
+
+  if (!course) {
+    return;
+  }
+
+  activeSlot = { day: course.day, period: course.period };
+  editingCourseId = course.id;
+  courseEditorTitle.textContent = "修改课程";
+  courseDoneButton.textContent = "保存";
+  courseNameInput.value = course.name;
+  courseRoomInput.value = course.room;
+  courseTeacherInput.value = course.teacher;
+  setSelectedWeeks(course.weeks);
+  openModal(courseModal, sourceElement);
+  courseNameInput.focus();
+  courseNameInput.select();
 }
 
 function openDeleteConfirm(courseId) {
@@ -607,8 +663,10 @@ function createCourseCard(course) {
   const card = document.createElement("article");
   card.className = "course-card";
   card.draggable = true;
+  card.tabIndex = 0;
   card.dataset.id = course.id;
   card.dataset.color = course.color;
+  card.setAttribute("aria-label", `修改 ${course.name}`);
 
   const deleteButton = document.createElement("button");
   deleteButton.className = "course-delete";
@@ -756,7 +814,14 @@ openCourseQueryButton.addEventListener("click", openCourseQuery);
 openDayQueryButton.addEventListener("click", openDayQuery);
 
 scheduleGrid.addEventListener("click", (event) => {
-  if (event.target.closest(".course-card")) {
+  if (event.target.closest(".course-delete")) {
+    return;
+  }
+
+  const card = event.target.closest(".course-card");
+
+  if (card) {
+    openCourseEditorForCourse(card.dataset.id, card);
     return;
   }
 
@@ -767,6 +832,21 @@ scheduleGrid.addEventListener("click", (event) => {
   }
 
   openCourseEditor(Number(slot.dataset.day), Number(slot.dataset.period), slot);
+});
+
+scheduleGrid.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") {
+    return;
+  }
+
+  const card = event.target.closest(".course-card");
+
+  if (!card || event.target.closest(".course-delete")) {
+    return;
+  }
+
+  event.preventDefault();
+  openCourseEditorForCourse(card.dataset.id, card);
 });
 
 scheduleGrid.addEventListener("dragstart", (event) => {
@@ -863,19 +943,29 @@ dayQueryDayButtons.forEach((button) => {
 });
 courseDoneButton.addEventListener("click", () => {
   const courseName = courseNameInput.value.trim() || "未命名课程";
+  const editedCourse = courses.find((course) => course.id === editingCourseId);
 
-  courses.push({
-    id: `course-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    name: courseName,
-    teacher: courseTeacherInput.value.trim(),
-    room: courseRoomInput.value.trim(),
-    day: activeSlot.day,
-    period: activeSlot.period,
-    weeks: normalizeWeeks([...selectedWeeks]),
-    weeksText: getSelectedWeeksText(),
-    color: getRandomCourseColor()
-  });
+  if (editedCourse) {
+    editedCourse.name = courseName;
+    editedCourse.teacher = courseTeacherInput.value.trim();
+    editedCourse.room = courseRoomInput.value.trim();
+    editedCourse.weeks = normalizeWeeks([...selectedWeeks]);
+    editedCourse.weeksText = getSelectedWeeksText();
+  } else {
+    courses.push({
+      id: `course-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      name: courseName,
+      teacher: courseTeacherInput.value.trim(),
+      room: courseRoomInput.value.trim(),
+      day: activeSlot.day,
+      period: activeSlot.period,
+      weeks: normalizeWeeks([...selectedWeeks]),
+      weeksText: getSelectedWeeksText(),
+      color: getRandomCourseColor()
+    });
+  }
 
+  editingCourseId = "";
   saveCourses();
   closeModal(courseModal);
   renderSchedule();
@@ -942,8 +1032,8 @@ weekGrid.addEventListener("click", (event) => {
     selectedWeeks.add(week);
   }
 
-  weekModeButtons.forEach((button) => button.classList.remove("is-selected"));
   updateWeekSummary();
+  updateWeekModeState();
   renderWeekPicker();
 });
 

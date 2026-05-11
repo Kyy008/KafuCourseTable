@@ -551,6 +551,11 @@ h1 {
   box-shadow: 0 10px 22px rgba(35, 39, 47, 0.1);
 }
 
+.course-card:focus-visible {
+  outline: 3px solid rgba(82, 133, 239, 0.5);
+  outline-offset: 2px;
+}
+
 .course-card.is-dragging {
   cursor: grabbing;
   opacity: 0.58;
