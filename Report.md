@@ -8,7 +8,7 @@
 
 作业使用 **纯HTML、CSS、JavaScript** 实现。并已完成 **所有基础与附加功能**。
 
-效果网页一键访问：[KafuCourseTable](https://kyy008.github.io/KafuCouresTable/)
+效果网页一键访问：[KafuCourseTable](https://kyy008.github.io/KafuCourseTable/)
 
 ## 1. 页面结构
 
