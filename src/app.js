@@ -18,7 +18,7 @@ const periods = [
   { period: 7, start: "21:00", end: "21:50" }
 ];
 
-const courses = [];
+const courseStorageKey = "kafu_courses";
 
 const weekdayRow = document.querySelector("#weekday-row");
 const scheduleGrid = document.querySelector("#schedule-grid");
@@ -40,7 +40,40 @@ const weekModeButtons = document.querySelectorAll(".week-mode");
 const totalWeeks = 16;
 const selectedWeeks = new Set(Array.from({ length: totalWeeks }, (_, index) => index + 1));
 const courseColors = Array.from({ length: 15 }, (_, index) => `card-${index + 1}`);
+const courses = loadCourses();
 let activeSlot = { day: 1, period: 1 };
+
+function normalizeCourse(course) {
+  return {
+    id: String(course.id || `course-${Date.now()}-${Math.random().toString(16).slice(2)}`),
+    name: String(course.name || "未命名课程"),
+    teacher: String(course.teacher || ""),
+    room: String(course.room || ""),
+    day: Number(course.day) || 1,
+    period: Number(course.period) || 1,
+    weeksText: String(course.weeksText || `第01-${String(totalWeeks).padStart(2, "0")}周`),
+    color: courseColors.includes(course.color) ? course.color : getRandomCourseColor()
+  };
+}
+
+function loadCourses() {
+  try {
+    const savedCourses = JSON.parse(localStorage.getItem(courseStorageKey));
+
+    if (!Array.isArray(savedCourses)) {
+      return [];
+    }
+
+    return savedCourses.map(normalizeCourse);
+  } catch (error) {
+    console.warn("课程数据读取失败，已使用空课程表。", error);
+    return [];
+  }
+}
+
+function saveCourses() {
+  localStorage.setItem(courseStorageKey, JSON.stringify(courses));
+}
 
 function getWeekdayName(day) {
   return weekdays.find((weekday) => weekday.day === day)?.name || "";
@@ -81,6 +114,20 @@ function resetCourseForm() {
   courseNameInput.value = "";
   courseRoomInput.value = "";
   courseTeacherInput.value = "";
+}
+
+function resetWeekSelection() {
+  selectedWeeks.clear();
+
+  for (let week = 1; week <= totalWeeks; week += 1) {
+    selectedWeeks.add(week);
+  }
+
+  weekModeButtons.forEach((button) => {
+    button.classList.toggle("is-selected", button.dataset.mode === "all");
+  });
+  updateWeekSummary();
+  renderWeekPicker();
 }
 
 function getSelectedWeeksText() {
@@ -130,6 +177,7 @@ function setWeekMode(mode) {
 function openCourseEditor(day, period) {
   activeSlot = { day, period };
   resetCourseForm();
+  resetWeekSelection();
   openModal(courseModal);
   courseNameInput.focus();
 }
@@ -167,24 +215,53 @@ function createCourseCard(course) {
   card.draggable = true;
   card.dataset.id = course.id;
   card.dataset.color = course.color;
-  card.innerHTML = `
-    <button class="course-delete" type="button" aria-label="删除 ${course.name}">×</button>
-    <span class="course-title">${course.name}</span>
-    <span class="course-detail">${course.weeksText}</span>
-    <span class="course-detail">
-      <svg class="course-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4Zm7 8c0-3.3-3.1-6-7-6s-7 2.7-7 6" />
-      </svg>
-      ${course.teacher || "未填写老师"}
-    </span>
-    <span class="course-detail">
-      <svg class="course-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M8 10h.01M12 10h.01M16 10h.01" />
-      </svg>
-      ${course.room || "未填写地点"}
-    </span>
-  `;
+
+  const deleteButton = document.createElement("button");
+  deleteButton.className = "course-delete";
+  deleteButton.type = "button";
+  deleteButton.setAttribute("aria-label", `删除 ${course.name}`);
+  deleteButton.textContent = "×";
+
+  const title = document.createElement("span");
+  title.className = "course-title";
+  title.textContent = course.name;
+
+  const weeks = document.createElement("span");
+  weeks.className = "course-detail";
+  weeks.textContent = course.weeksText;
+
+  const teacher = createIconDetail("teacher", course.teacher);
+  const room = createIconDetail("room", course.room);
+
+  card.append(deleteButton, title, weeks, teacher, room);
   return card;
+}
+
+function createIconDetail(type, text) {
+  const detail = document.createElement("span");
+  detail.className = "course-detail";
+
+  if (!text) {
+    detail.classList.add("is-empty");
+    return detail;
+  }
+
+  const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+  icon.classList.add("course-icon");
+  icon.setAttribute("viewBox", "0 0 24 24");
+  icon.setAttribute("aria-hidden", "true");
+  path.setAttribute(
+    "d",
+    type === "teacher"
+      ? "M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4Zm7 8c0-3.3-3.1-6-7-6s-7 2.7-7 6"
+      : "M4 21V7l8-4 8 4v14M9 21v-6h6v6M8 10h.01M12 10h.01M16 10h.01"
+  );
+
+  icon.appendChild(path);
+  detail.append(icon, document.createTextNode(text));
+  return detail;
 }
 
 function createSlot(day, period) {
@@ -251,6 +328,7 @@ courseDoneButton.addEventListener("click", () => {
     color: getRandomCourseColor()
   });
 
+  saveCourses();
   closeModal(courseModal);
   renderSchedule();
 });
@@ -310,6 +388,7 @@ scheduleGrid.addEventListener("click", (event) => {
 
   if (courseIndex !== -1) {
     courses.splice(courseIndex, 1);
+    saveCourses();
     renderSchedule();
   }
 });
