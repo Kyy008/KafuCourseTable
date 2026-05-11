@@ -24,10 +24,12 @@ const weekdayRow = document.querySelector("#weekday-row");
 const scheduleGrid = document.querySelector("#schedule-grid");
 const courseModal = document.querySelector("#course-modal");
 const weekModal = document.querySelector("#week-modal");
-const slotSummary = document.querySelector("#slot-summary");
 const weekSummary = document.querySelector("#week-summary");
 const weekGrid = document.querySelector("#week-grid");
 const courseNameInput = document.querySelector("#course-name");
+const courseRoomInput = document.querySelector("#course-room");
+const courseTeacherInput = document.querySelector("#course-teacher");
+const courseForm = document.querySelector(".course-form");
 const courseCancelButton = document.querySelector("#course-cancel");
 const courseDoneButton = document.querySelector("#course-done");
 const openWeekPickerButton = document.querySelector("#open-week-picker");
@@ -37,9 +39,19 @@ const weekModeButtons = document.querySelectorAll(".week-mode");
 
 const totalWeeks = 16;
 const selectedWeeks = new Set(Array.from({ length: totalWeeks }, (_, index) => index + 1));
+const courseColors = Array.from({ length: 15 }, (_, index) => `card-${index + 1}`);
+let activeSlot = { day: 1, period: 1 };
 
 function getWeekdayName(day) {
   return weekdays.find((weekday) => weekday.day === day)?.name || "";
+}
+
+function getPeriod(period) {
+  return periods.find((item) => item.period === period);
+}
+
+function getRandomCourseColor() {
+  return courseColors[Math.floor(Math.random() * courseColors.length)];
 }
 
 function openModal(modal) {
@@ -63,6 +75,27 @@ function updateWeekSummary() {
 
   const weeks = [...selectedWeeks].sort((a, b) => a - b);
   weekSummary.textContent = `第 ${weeks.join("、")} 周`;
+}
+
+function resetCourseForm() {
+  courseNameInput.value = "";
+  courseRoomInput.value = "";
+  courseTeacherInput.value = "";
+}
+
+function getSelectedWeeksText() {
+  if (selectedWeeks.size === totalWeeks) {
+    return `第01-${String(totalWeeks).padStart(2, "0")}周`;
+  }
+
+  if (selectedWeeks.size === 0) {
+    return "未选择周数";
+  }
+
+  return `第${[...selectedWeeks]
+    .sort((a, b) => a - b)
+    .map((week) => String(week).padStart(2, "0"))
+    .join("、")}周`;
 }
 
 function renderWeekPicker() {
@@ -95,7 +128,8 @@ function setWeekMode(mode) {
 }
 
 function openCourseEditor(day, period) {
-  slotSummary.textContent = `周${getWeekdayName(day)} 第 ${period} 节`;
+  activeSlot = { day, period };
+  resetCourseForm();
   openModal(courseModal);
   courseNameInput.focus();
 }
@@ -134,8 +168,21 @@ function createCourseCard(course) {
   card.dataset.id = course.id;
   card.dataset.color = course.color;
   card.innerHTML = `
+    <button class="course-delete" type="button" aria-label="删除 ${course.name}">×</button>
     <span class="course-title">${course.name}</span>
-    <span class="course-meta">@ ${course.room}<br>${course.teacher}</span>
+    <span class="course-detail">${course.weeksText}</span>
+    <span class="course-detail">
+      <svg class="course-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4Zm7 8c0-3.3-3.1-6-7-6s-7 2.7-7 6" />
+      </svg>
+      ${course.teacher || "未填写老师"}
+    </span>
+    <span class="course-detail">
+      <svg class="course-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M8 10h.01M12 10h.01M16 10h.01" />
+      </svg>
+      ${course.room || "未填写地点"}
+    </span>
   `;
   return card;
 }
@@ -145,12 +192,15 @@ function createSlot(day, period) {
   slot.className = "schedule-slot";
   slot.dataset.day = day;
   slot.dataset.period = period;
+  const slotCourses = courses.filter((course) => course.day === day && course.period === period);
 
-  courses
-    .filter((course) => course.day === day && course.period === period)
-    .forEach((course) => {
-      slot.appendChild(createCourseCard(course));
-    });
+  if (slotCourses.length > 0) {
+    slot.classList.add("has-course");
+  }
+
+  slotCourses.forEach((course) => {
+    slot.appendChild(createCourseCard(course));
+  });
 
   return slot;
 }
@@ -172,6 +222,10 @@ renderSchedule();
 renderWeekPicker();
 
 scheduleGrid.addEventListener("click", (event) => {
+  if (event.target.closest(".course-card")) {
+    return;
+  }
+
   const slot = event.target.closest(".schedule-slot");
 
   if (!slot) {
@@ -182,7 +236,24 @@ scheduleGrid.addEventListener("click", (event) => {
 });
 
 courseCancelButton.addEventListener("click", () => closeModal(courseModal));
-courseDoneButton.addEventListener("click", () => closeModal(courseModal));
+courseForm.addEventListener("submit", (event) => event.preventDefault());
+courseDoneButton.addEventListener("click", () => {
+  const courseName = courseNameInput.value.trim() || "未命名课程";
+
+  courses.push({
+    id: `course-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    name: courseName,
+    teacher: courseTeacherInput.value.trim(),
+    room: courseRoomInput.value.trim(),
+    day: activeSlot.day,
+    period: activeSlot.period,
+    weeksText: getSelectedWeeksText(),
+    color: getRandomCourseColor()
+  });
+
+  closeModal(courseModal);
+  renderSchedule();
+});
 openWeekPickerButton.addEventListener("click", () => openModal(weekModal));
 weekCancelButton.addEventListener("click", () => closeModal(weekModal));
 weekDoneButton.addEventListener("click", () => {
@@ -224,6 +295,23 @@ weekGrid.addEventListener("click", (event) => {
   weekModeButtons.forEach((button) => button.classList.remove("is-selected"));
   updateWeekSummary();
   renderWeekPicker();
+});
+
+scheduleGrid.addEventListener("click", (event) => {
+  const deleteButton = event.target.closest(".course-delete");
+
+  if (!deleteButton) {
+    return;
+  }
+
+  event.stopPropagation();
+  const card = deleteButton.closest(".course-card");
+  const courseIndex = courses.findIndex((course) => course.id === card.dataset.id);
+
+  if (courseIndex !== -1) {
+    courses.splice(courseIndex, 1);
+    renderSchedule();
+  }
 });
 
 document.addEventListener("keydown", (event) => {

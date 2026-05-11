@@ -262,29 +262,33 @@ h1 {
   opacity: 1;
 }
 
+.schedule-slot.has-course:hover::before,
+.schedule-slot.has-course:hover::after {
+  opacity: 0;
+}
+
 .course-card {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  min-height: 96px;
-  padding: 16px 14px 12px;
+  min-height: 98px;
+  padding: 12px 8px 10px 12px;
   overflow: hidden;
   border-radius: 8px;
-  background: var(--purple-bg);
-  color: var(--purple);
+  color: #4c5358;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-left: 6px solid var(--card-accent);
   cursor: grab;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.72) inset;
+  --card-accent: #a9bf68;
+  --card-bg: #e8edda;
+  --card-border: #b7ca75;
 }
 
 .course-card::before {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 12px;
-  background: rgba(105, 101, 181, 0.26);
-  content: "";
+  content: none;
 }
 
 .course-card:hover {
@@ -293,54 +297,160 @@ h1 {
 }
 
 .course-title {
-  font-size: 18px;
-  font-weight: 760;
+  display: -webkit-box;
+  margin: 0 28px 8px 0;
+  overflow: hidden;
+  color: #3f464b;
+  font-size: 13px;
+  font-weight: 800;
   line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.course-meta {
-  margin-top: auto;
-  padding-top: 10px;
-  font-size: 14px;
+.course-detail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  color: #596166;
+  font-size: 12px;
   font-weight: 650;
   line-height: 1.45;
-  opacity: 0.88;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.course-card[data-color="blue"] {
-  color: var(--blue);
-  background: var(--blue-bg);
+.course-icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+  opacity: 0.9;
 }
 
-.course-card[data-color="blue"]::before {
-  background: rgba(76, 149, 217, 0.22);
+.course-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: #293034;
+  background: rgba(255, 255, 255, 0.68);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.14s ease, background 0.14s ease;
 }
 
-.course-card[data-color="green"] {
-  color: var(--green);
-  background: var(--green-bg);
+.course-card:hover .course-delete {
+  opacity: 1;
 }
 
-.course-card[data-color="green"]::before {
-  background: rgba(61, 148, 114, 0.22);
+.course-delete:hover {
+  background: rgba(255, 255, 255, 0.92);
 }
 
-.course-card[data-color="orange"] {
-  color: var(--orange);
-  background: var(--orange-bg);
+.course-card[data-color="card-1"] {
+  --card-accent: #a9bf68;
+  --card-bg: #e9eedc;
+  --card-border: #b8cb76;
 }
 
-.course-card[data-color="orange"]::before {
-  background: rgba(185, 115, 53, 0.22);
+.course-card[data-color="card-2"] {
+  --card-accent: #68bac6;
+  --card-bg: #dceff2;
+  --card-border: #83c9d1;
 }
 
-.course-card[data-color="rose"] {
-  color: var(--rose);
-  background: var(--rose-bg);
+.course-card[data-color="card-3"] {
+  --card-accent: #8da6d8;
+  --card-bg: #e5ecfb;
+  --card-border: #a6b9e3;
 }
 
-.course-card[data-color="rose"]::before {
-  background: rgba(182, 90, 108, 0.2);
+.course-card[data-color="card-4"] {
+  --card-accent: #d7a35e;
+  --card-bg: #f8ecd8;
+  --card-border: #e1b576;
+}
+
+.course-card[data-color="card-5"] {
+  --card-accent: #d78aa2;
+  --card-bg: #f8e4eb;
+  --card-border: #e3a1b5;
+}
+
+.course-card[data-color="card-6"] {
+  --card-accent: #83be8d;
+  --card-bg: #e2f0e5;
+  --card-border: #99cda1;
+}
+
+.course-card[data-color="card-7"] {
+  --card-accent: #a58bd8;
+  --card-bg: #ece5f8;
+  --card-border: #b7a1e3;
+}
+
+.course-card[data-color="card-8"] {
+  --card-accent: #d07f70;
+  --card-bg: #f7e3de;
+  --card-border: #dd9689;
+}
+
+.course-card[data-color="card-9"] {
+  --card-accent: #6fb0e0;
+  --card-bg: #e1eff9;
+  --card-border: #89bee7;
+}
+
+.course-card[data-color="card-10"] {
+  --card-accent: #b8a45f;
+  --card-bg: #f0ead7;
+  --card-border: #c8b773;
+}
+
+.course-card[data-color="card-11"] {
+  --card-accent: #72b9a7;
+  --card-bg: #ddf0eb;
+  --card-border: #8cc8ba;
+}
+
+.course-card[data-color="card-12"] {
+  --card-accent: #c483cc;
+  --card-bg: #f2e2f4;
+  --card-border: #d199d8;
+}
+
+.course-card[data-color="card-13"] {
+  --card-accent: #8fb96c;
+  --card-bg: #e6f0dc;
+  --card-border: #a5c682;
+}
+
+.course-card[data-color="card-14"] {
+  --card-accent: #7d9acb;
+  --card-bg: #e5ecf6;
+  --card-border: #98add6;
+}
+
+.course-card[data-color="card-15"] {
+  --card-accent: #c79b73;
+  --card-bg: #f1e7dc;
+  --card-border: #d3af8f;
 }
 
 .modal-backdrop {
