@@ -24,6 +24,8 @@ const weekdayRow = document.querySelector("#weekday-row");
 const scheduleGrid = document.querySelector("#schedule-grid");
 const courseModal = document.querySelector("#course-modal");
 const weekModal = document.querySelector("#week-modal");
+const deleteModal = document.querySelector("#delete-modal");
+const deleteMessage = document.querySelector("#delete-message");
 const weekSummary = document.querySelector("#week-summary");
 const weekGrid = document.querySelector("#week-grid");
 const courseNameInput = document.querySelector("#course-name");
@@ -35,6 +37,8 @@ const courseDoneButton = document.querySelector("#course-done");
 const openWeekPickerButton = document.querySelector("#open-week-picker");
 const weekCancelButton = document.querySelector("#week-cancel");
 const weekDoneButton = document.querySelector("#week-done");
+const deleteCancelButton = document.querySelector("#delete-cancel");
+const deleteConfirmButton = document.querySelector("#delete-confirm");
 const weekModeButtons = document.querySelectorAll(".week-mode");
 
 const totalWeeks = 16;
@@ -42,6 +46,8 @@ const selectedWeeks = new Set(Array.from({ length: totalWeeks }, (_, index) => i
 const courseColors = Array.from({ length: 15 }, (_, index) => `card-${index + 1}`);
 const courses = loadCourses();
 let activeSlot = { day: 1, period: 1 };
+let draggingCourseId = "";
+let pendingDeleteCourseId = "";
 
 function normalizeCourse(course) {
   return {
@@ -182,6 +188,31 @@ function openCourseEditor(day, period) {
   courseNameInput.focus();
 }
 
+function openDeleteConfirm(courseId) {
+  const course = courses.find((item) => item.id === courseId);
+
+  if (!course) {
+    return;
+  }
+
+  pendingDeleteCourseId = courseId;
+  deleteMessage.textContent = `确定要删除「${course.name}」吗？删除后该课程将从课程表中移除。`;
+  openModal(deleteModal);
+}
+
+function deletePendingCourse() {
+  const courseIndex = courses.findIndex((course) => course.id === pendingDeleteCourseId);
+
+  if (courseIndex !== -1) {
+    courses.splice(courseIndex, 1);
+    saveCourses();
+    renderSchedule();
+  }
+
+  pendingDeleteCourseId = "";
+  closeModal(deleteModal);
+}
+
 function renderWeekdays() {
   weekdayRow.innerHTML = '<div class="month-cell">5 月</div>';
 
@@ -294,6 +325,46 @@ function renderSchedule() {
   });
 }
 
+function clearDragState() {
+  draggingCourseId = "";
+  scheduleGrid.querySelectorAll(".drag-over").forEach((slot) => {
+    slot.classList.remove("drag-over");
+    delete slot.dataset.dropColor;
+  });
+  scheduleGrid.querySelectorAll(".drop-pulse").forEach((pulse) => {
+    pulse.remove();
+  });
+  scheduleGrid.querySelectorAll(".is-dragging").forEach((card) => {
+    card.classList.remove("is-dragging");
+  });
+}
+
+function showDropPulse(slot) {
+  if (slot.querySelector(".drop-pulse")) {
+    return;
+  }
+
+  const pulse = document.createElement("span");
+  const pulseInner = document.createElement("span");
+  pulse.className = "drop-pulse";
+  pulseInner.className = "drop-pulse drop-pulse-secondary";
+  slot.append(pulse, pulseInner);
+}
+
+function applyDropColor(slot) {
+  const course = courses.find((item) => item.id === draggingCourseId);
+
+  if (course) {
+    slot.dataset.dropColor = course.color;
+  }
+}
+
+function removeDropPulse(slot) {
+  slot.querySelectorAll(".drop-pulse").forEach((pulse) => {
+    pulse.remove();
+  });
+}
+
 renderWeekdays();
 renderSchedule();
 renderWeekPicker();
@@ -311,6 +382,78 @@ scheduleGrid.addEventListener("click", (event) => {
 
   openCourseEditor(Number(slot.dataset.day), Number(slot.dataset.period));
 });
+
+scheduleGrid.addEventListener("dragstart", (event) => {
+  const card = event.target.closest(".course-card");
+
+  if (!card || event.target.closest(".course-delete")) {
+    return;
+  }
+
+  draggingCourseId = card.dataset.id;
+  card.classList.add("is-dragging");
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", draggingCourseId);
+});
+
+scheduleGrid.addEventListener("dragover", (event) => {
+  const slot = event.target.closest(".schedule-slot");
+
+  if (!slot || !draggingCourseId) {
+    return;
+  }
+
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "move";
+  scheduleGrid.querySelectorAll(".drag-over").forEach((item) => {
+    if (item !== slot) {
+      item.classList.remove("drag-over");
+      delete item.dataset.dropColor;
+      removeDropPulse(item);
+    }
+  });
+  slot.classList.add("drag-over");
+  applyDropColor(slot);
+  showDropPulse(slot);
+});
+
+scheduleGrid.addEventListener("dragleave", (event) => {
+  const slot = event.target.closest(".schedule-slot");
+
+  if (!slot || slot.contains(event.relatedTarget)) {
+    return;
+  }
+
+  slot.classList.remove("drag-over");
+  delete slot.dataset.dropColor;
+  removeDropPulse(slot);
+});
+
+scheduleGrid.addEventListener("drop", (event) => {
+  const slot = event.target.closest(".schedule-slot");
+  const courseId = event.dataTransfer.getData("text/plain") || draggingCourseId;
+
+  if (!slot || !courseId) {
+    clearDragState();
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  const course = courses.find((item) => item.id === courseId);
+
+  if (course) {
+    course.day = Number(slot.dataset.day);
+    course.period = Number(slot.dataset.period);
+    saveCourses();
+    renderSchedule();
+  }
+
+  clearDragState();
+});
+
+scheduleGrid.addEventListener("dragend", clearDragState);
 
 courseCancelButton.addEventListener("click", () => closeModal(courseModal));
 courseForm.addEventListener("submit", (event) => event.preventDefault());
@@ -338,6 +481,11 @@ weekDoneButton.addEventListener("click", () => {
   updateWeekSummary();
   closeModal(weekModal);
 });
+deleteCancelButton.addEventListener("click", () => {
+  pendingDeleteCourseId = "";
+  closeModal(deleteModal);
+});
+deleteConfirmButton.addEventListener("click", deletePendingCourse);
 
 courseModal.addEventListener("click", (event) => {
   if (event.target === courseModal) {
@@ -348,6 +496,13 @@ courseModal.addEventListener("click", (event) => {
 weekModal.addEventListener("click", (event) => {
   if (event.target === weekModal) {
     closeModal(weekModal);
+  }
+});
+
+deleteModal.addEventListener("click", (event) => {
+  if (event.target === deleteModal) {
+    pendingDeleteCourseId = "";
+    closeModal(deleteModal);
   }
 });
 
@@ -384,13 +539,7 @@ scheduleGrid.addEventListener("click", (event) => {
 
   event.stopPropagation();
   const card = deleteButton.closest(".course-card");
-  const courseIndex = courses.findIndex((course) => course.id === card.dataset.id);
-
-  if (courseIndex !== -1) {
-    courses.splice(courseIndex, 1);
-    saveCourses();
-    renderSchedule();
-  }
+  openDeleteConfirm(card.dataset.id);
 });
 
 document.addEventListener("keydown", (event) => {
@@ -399,5 +548,7 @@ document.addEventListener("keydown", (event) => {
   }
 
   closeModal(weekModal);
+  closeModal(deleteModal);
   closeModal(courseModal);
+  pendingDeleteCourseId = "";
 });

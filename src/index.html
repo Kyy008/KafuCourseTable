@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的课程表</title>
-  <link rel="stylesheet" href="style.css?v=course-card-left">
+  <link rel="stylesheet" href="style.css?v=delete-confirm">
 </head>
 <body>
   <main class="app-shell">
@@ -78,6 +78,17 @@
     </section>
   </div>
 
-  <script src="app.js?v=course-card-left"></script>
+  <div class="modal-backdrop" id="delete-modal" hidden>
+    <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+      <h2 id="delete-title">确认删除课程？</h2>
+      <p id="delete-message">删除后该课程将从课程表中移除。</p>
+      <div class="confirm-actions">
+        <button class="confirm-cancel" id="delete-cancel" type="button">取消</button>
+        <button class="confirm-danger" id="delete-confirm" type="button">删除</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js?v=delete-confirm"></script>
 </body>
 </html>
