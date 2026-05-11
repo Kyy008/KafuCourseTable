@@ -1,11 +1,11 @@
 const weekdays = [
-  { day: 1, name: "一", date: 4 },
-  { day: 2, name: "二", date: 5 },
-  { day: 3, name: "三", date: 6 },
-  { day: 4, name: "四", date: 7 },
-  { day: 5, name: "五", date: 8 },
-  { day: 6, name: "六", date: 9, active: true },
-  { day: 7, name: "日", date: 10 }
+  { day: 1, name: "一" },
+  { day: 2, name: "二" },
+  { day: 3, name: "三" },
+  { day: 4, name: "四" },
+  { day: 5, name: "五" },
+  { day: 6, name: "六", active: true },
+  { day: 7, name: "日" }
 ];
 
 const periods = [
@@ -22,6 +22,9 @@ const courseStorageKey = "kafu_courses";
 
 const weekdayRow = document.querySelector("#weekday-row");
 const scheduleGrid = document.querySelector("#schedule-grid");
+const currentWeekLabel = document.querySelector("#current-week-label");
+const weekPrevButton = document.querySelector("#week-prev");
+const weekNextButton = document.querySelector("#week-next");
 const courseModal = document.querySelector("#course-modal");
 const weekModal = document.querySelector("#week-modal");
 const deleteModal = document.querySelector("#delete-modal");
@@ -42,14 +45,20 @@ const deleteConfirmButton = document.querySelector("#delete-confirm");
 const weekModeButtons = document.querySelectorAll(".week-mode");
 
 const totalWeeks = 16;
+const initialWeek = 11;
+const semesterStartDate = new Date(2026, 1, 23);
 const selectedWeeks = new Set(Array.from({ length: totalWeeks }, (_, index) => index + 1));
 const courseColors = Array.from({ length: 15 }, (_, index) => `card-${index + 1}`);
 const courses = loadCourses();
+let currentWeek = initialWeek;
 let activeSlot = { day: 1, period: 1 };
 let draggingCourseId = "";
 let pendingDeleteCourseId = "";
+let scheduleAnimationTimer = 0;
 
 function normalizeCourse(course) {
+  const weeks = getCourseWeeks(course);
+
   return {
     id: String(course.id || `course-${Date.now()}-${Math.random().toString(16).slice(2)}`),
     name: String(course.name || "未命名课程"),
@@ -57,7 +66,8 @@ function normalizeCourse(course) {
     room: String(course.room || ""),
     day: Number(course.day) || 1,
     period: Number(course.period) || 1,
-    weeksText: String(course.weeksText || `第01-${String(totalWeeks).padStart(2, "0")}周`),
+    weeks,
+    weeksText: getWeeksText(weeks),
     color: courseColors.includes(course.color) ? course.color : getRandomCourseColor()
   };
 }
@@ -91,6 +101,112 @@ function getPeriod(period) {
 
 function getRandomCourseColor() {
   return courseColors[Math.floor(Math.random() * courseColors.length)];
+}
+
+function getAllWeeks() {
+  return Array.from({ length: totalWeeks }, (_, index) => index + 1);
+}
+
+function normalizeWeeks(weeks) {
+  return [...new Set(weeks
+    .map((week) => Number(week))
+    .filter((week) => Number.isInteger(week) && week >= 1 && week <= totalWeeks))]
+    .sort((a, b) => a - b);
+}
+
+function parseWeeksText(weeksText) {
+  if (typeof weeksText !== "string") {
+    return [];
+  }
+
+  if (weeksText.includes("未选择")) {
+    return [];
+  }
+
+  const rangeMatch = weeksText.match(/(\d{1,2})\s*-\s*(\d{1,2})/);
+
+  if (rangeMatch) {
+    const startWeek = Number(rangeMatch[1]);
+    const endWeek = Number(rangeMatch[2]);
+    const rangeWeeks = [];
+
+    for (let week = startWeek; week <= endWeek; week += 1) {
+      rangeWeeks.push(week);
+    }
+
+    return normalizeWeeks(rangeWeeks);
+  }
+
+  return normalizeWeeks(weeksText.match(/\d{1,2}/g) || []);
+}
+
+function getCourseWeeks(course) {
+  if (Array.isArray(course.weeks)) {
+    return normalizeWeeks(course.weeks);
+  }
+
+  if (typeof course.weeksText === "string") {
+    const parsedWeeks = parseWeeksText(course.weeksText);
+    return course.weeksText.includes("未选择") ? [] : parsedWeeks.length > 0 ? parsedWeeks : getAllWeeks();
+  }
+
+  return getAllWeeks();
+}
+
+function getWeeksText(weeks) {
+  const normalizedWeeks = normalizeWeeks(weeks);
+
+  if (normalizedWeeks.length === totalWeeks) {
+    return `第01-${String(totalWeeks).padStart(2, "0")}周`;
+  }
+
+  if (normalizedWeeks.length === 0) {
+    return "未选择周数";
+  }
+
+  return `第${normalizedWeeks
+    .map((week) => String(week).padStart(2, "0"))
+    .join("、")}周`;
+}
+
+function isCourseVisibleInCurrentWeek(course) {
+  return course.weeks.includes(currentWeek);
+}
+
+function getWeekDates(week) {
+  return weekdays.map((weekday) => {
+    const date = new Date(semesterStartDate);
+    date.setDate(semesterStartDate.getDate() + (week - 1) * 7 + weekday.day - 1);
+    return date;
+  });
+}
+
+function updateWeekControls(direction) {
+  currentWeekLabel.textContent = `第 ${currentWeek} 周`;
+  weekPrevButton.disabled = currentWeek === 1;
+  weekNextButton.disabled = currentWeek === totalWeeks;
+
+  if (!direction) {
+    return;
+  }
+
+  currentWeekLabel.classList.remove("week-label-slide-left", "week-label-slide-right");
+  void currentWeekLabel.offsetWidth;
+  currentWeekLabel.classList.add(direction === "next" ? "week-label-slide-left" : "week-label-slide-right");
+}
+
+function switchWeek(direction) {
+  const nextWeek = direction === "next" ? currentWeek + 1 : currentWeek - 1;
+
+  if (nextWeek < 1 || nextWeek > totalWeeks) {
+    return;
+  }
+
+  currentWeek = nextWeek;
+  updateWeekControls(direction);
+  renderWeekdays(direction);
+  renderSchedule();
+  animateScheduleCards(direction);
 }
 
 function openModal(modal, sourceElement) {
@@ -170,18 +286,7 @@ function resetWeekSelection() {
 }
 
 function getSelectedWeeksText() {
-  if (selectedWeeks.size === totalWeeks) {
-    return `第01-${String(totalWeeks).padStart(2, "0")}周`;
-  }
-
-  if (selectedWeeks.size === 0) {
-    return "未选择周数";
-  }
-
-  return `第${[...selectedWeeks]
-    .sort((a, b) => a - b)
-    .map((week) => String(week).padStart(2, "0"))
-    .join("、")}周`;
+  return getWeeksText([...selectedWeeks]);
 }
 
 function renderWeekPicker() {
@@ -251,18 +356,35 @@ function deletePendingCourse() {
   closeModal(deleteModal);
 }
 
-function renderWeekdays() {
-  weekdayRow.innerHTML = '<div class="month-cell">5 月</div>';
+function renderWeekdays(direction) {
+  const weekDates = getWeekDates(currentWeek);
+  const mondayMonth = weekDates[0].getMonth() + 1;
+  const previousMonth = weekdayRow.querySelector(".month-number")?.textContent;
+  const shouldAnimateMonth = direction && previousMonth !== String(mondayMonth);
 
-  weekdays.forEach((weekday) => {
+  weekdayRow.classList.remove("weekdays-slide-left", "weekdays-slide-right");
+  weekdayRow.innerHTML = `
+    <div class="month-cell">
+      <span class="month-number${shouldAnimateMonth ? " is-changing" : ""}">${mondayMonth}</span>
+      <span class="month-unit">月</span>
+    </div>
+  `;
+
+  weekdays.forEach((weekday, index) => {
     const cell = document.createElement("div");
     cell.className = `weekday-cell${weekday.active ? " is-active" : ""}`;
+    cell.style.setProperty("--day-index", index);
     cell.innerHTML = `
       <span class="weekday-name">${weekday.name}</span>
-      <span class="date-number">${weekday.date}</span>
+      <span class="date-number">${weekDates[index].getDate()}</span>
     `;
     weekdayRow.appendChild(cell);
   });
+
+  if (direction) {
+    void weekdayRow.offsetWidth;
+    weekdayRow.classList.add(direction === "next" ? "weekdays-slide-left" : "weekdays-slide-right");
+  }
 }
 
 function createTimeAxis(period) {
@@ -338,7 +460,9 @@ function createSlot(day, period) {
   slot.className = "schedule-slot";
   slot.dataset.day = day;
   slot.dataset.period = period;
-  const slotCourses = courses.filter((course) => course.day === day && course.period === period);
+  const slotCourses = courses.filter((course) => {
+    return course.day === day && course.period === period && isCourseVisibleInCurrentWeek(course);
+  });
 
   if (slotCourses.length > 0) {
     slot.classList.add("has-course");
@@ -352,6 +476,7 @@ function createSlot(day, period) {
 }
 
 function renderSchedule() {
+  scheduleGrid.classList.remove("course-cards-slide-left", "course-cards-slide-right");
   scheduleGrid.innerHTML = "";
 
   periods.forEach((period) => {
@@ -361,6 +486,20 @@ function renderSchedule() {
       scheduleGrid.appendChild(createSlot(weekday.day, period.period));
     });
   });
+}
+
+function animateScheduleCards(direction) {
+  if (!direction) {
+    return;
+  }
+
+  window.clearTimeout(scheduleAnimationTimer);
+  scheduleGrid.classList.remove("course-cards-slide-left", "course-cards-slide-right");
+  void scheduleGrid.offsetWidth;
+  scheduleGrid.classList.add(direction === "next" ? "course-cards-slide-left" : "course-cards-slide-right");
+  scheduleAnimationTimer = window.setTimeout(() => {
+    scheduleGrid.classList.remove("course-cards-slide-left", "course-cards-slide-right");
+  }, 360);
 }
 
 function clearDragState() {
@@ -404,8 +543,12 @@ function removeDropPulse(slot) {
 }
 
 renderWeekdays();
+updateWeekControls();
 renderSchedule();
 renderWeekPicker();
+
+weekPrevButton.addEventListener("click", () => switchWeek("prev"));
+weekNextButton.addEventListener("click", () => switchWeek("next"));
 
 scheduleGrid.addEventListener("click", (event) => {
   if (event.target.closest(".course-card")) {
@@ -505,6 +648,7 @@ courseDoneButton.addEventListener("click", () => {
     room: courseRoomInput.value.trim(),
     day: activeSlot.day,
     period: activeSlot.period,
+    weeks: normalizeWeeks([...selectedWeeks]),
     weeksText: getSelectedWeeksText(),
     color: getRandomCourseColor()
   });

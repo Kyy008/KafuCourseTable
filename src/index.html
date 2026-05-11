@@ -21,7 +21,11 @@
 
     <section class="week-panel" aria-label="本周课程表">
       <div class="schedule-board">
-        <div class="week-title">第 13 周</div>
+        <div class="week-title">
+          <button class="week-step" id="week-prev" type="button" aria-label="上一周">‹</button>
+          <span id="current-week-label">第 11 周</span>
+          <button class="week-step" id="week-next" type="button" aria-label="下一周">›</button>
+        </div>
         <div class="weekday-row" id="weekday-row"></div>
         <div class="schedule-grid" id="schedule-grid"></div>
       </div>
