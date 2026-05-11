@@ -22,6 +22,83 @@ const courses = [];
 
 const weekdayRow = document.querySelector("#weekday-row");
 const scheduleGrid = document.querySelector("#schedule-grid");
+const courseModal = document.querySelector("#course-modal");
+const weekModal = document.querySelector("#week-modal");
+const slotSummary = document.querySelector("#slot-summary");
+const weekSummary = document.querySelector("#week-summary");
+const weekGrid = document.querySelector("#week-grid");
+const courseNameInput = document.querySelector("#course-name");
+const courseCancelButton = document.querySelector("#course-cancel");
+const courseDoneButton = document.querySelector("#course-done");
+const openWeekPickerButton = document.querySelector("#open-week-picker");
+const weekCancelButton = document.querySelector("#week-cancel");
+const weekDoneButton = document.querySelector("#week-done");
+const weekModeButtons = document.querySelectorAll(".week-mode");
+
+const totalWeeks = 16;
+const selectedWeeks = new Set(Array.from({ length: totalWeeks }, (_, index) => index + 1));
+
+function getWeekdayName(day) {
+  return weekdays.find((weekday) => weekday.day === day)?.name || "";
+}
+
+function openModal(modal) {
+  modal.hidden = false;
+}
+
+function closeModal(modal) {
+  modal.hidden = true;
+}
+
+function updateWeekSummary() {
+  if (selectedWeeks.size === totalWeeks) {
+    weekSummary.textContent = `第 1-${totalWeeks} 周`;
+    return;
+  }
+
+  if (selectedWeeks.size === 0) {
+    weekSummary.textContent = "请选择周数";
+    return;
+  }
+
+  const weeks = [...selectedWeeks].sort((a, b) => a - b);
+  weekSummary.textContent = `第 ${weeks.join("、")} 周`;
+}
+
+function renderWeekPicker() {
+  weekGrid.innerHTML = "";
+
+  for (let week = 1; week <= totalWeeks; week += 1) {
+    const button = document.createElement("button");
+    button.className = `week-item${selectedWeeks.has(week) ? " is-selected" : ""}`;
+    button.type = "button";
+    button.textContent = week;
+    button.dataset.week = week;
+    weekGrid.appendChild(button);
+  }
+}
+
+function setWeekMode(mode) {
+  selectedWeeks.clear();
+
+  for (let week = 1; week <= totalWeeks; week += 1) {
+    if (mode === "all" || (mode === "odd" && week % 2 === 1) || (mode === "even" && week % 2 === 0)) {
+      selectedWeeks.add(week);
+    }
+  }
+
+  weekModeButtons.forEach((button) => {
+    button.classList.toggle("is-selected", button.dataset.mode === mode);
+  });
+  updateWeekSummary();
+  renderWeekPicker();
+}
+
+function openCourseEditor(day, period) {
+  slotSummary.textContent = `周${getWeekdayName(day)} 第 ${period} 节`;
+  openModal(courseModal);
+  courseNameInput.focus();
+}
 
 function renderWeekdays() {
   weekdayRow.innerHTML = '<div class="month-cell">5 月</div>';
@@ -92,3 +169,68 @@ function renderSchedule() {
 
 renderWeekdays();
 renderSchedule();
+renderWeekPicker();
+
+scheduleGrid.addEventListener("click", (event) => {
+  const slot = event.target.closest(".schedule-slot");
+
+  if (!slot) {
+    return;
+  }
+
+  openCourseEditor(Number(slot.dataset.day), Number(slot.dataset.period));
+});
+
+courseCancelButton.addEventListener("click", () => closeModal(courseModal));
+courseDoneButton.addEventListener("click", () => closeModal(courseModal));
+openWeekPickerButton.addEventListener("click", () => openModal(weekModal));
+weekCancelButton.addEventListener("click", () => closeModal(weekModal));
+weekDoneButton.addEventListener("click", () => {
+  updateWeekSummary();
+  closeModal(weekModal);
+});
+
+courseModal.addEventListener("click", (event) => {
+  if (event.target === courseModal) {
+    closeModal(courseModal);
+  }
+});
+
+weekModal.addEventListener("click", (event) => {
+  if (event.target === weekModal) {
+    closeModal(weekModal);
+  }
+});
+
+weekModeButtons.forEach((button) => {
+  button.addEventListener("click", () => setWeekMode(button.dataset.mode));
+});
+
+weekGrid.addEventListener("click", (event) => {
+  const weekButton = event.target.closest(".week-item");
+
+  if (!weekButton) {
+    return;
+  }
+
+  const week = Number(weekButton.dataset.week);
+
+  if (selectedWeeks.has(week)) {
+    selectedWeeks.delete(week);
+  } else {
+    selectedWeeks.add(week);
+  }
+
+  weekModeButtons.forEach((button) => button.classList.remove("is-selected"));
+  updateWeekSummary();
+  renderWeekPicker();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") {
+    return;
+  }
+
+  closeModal(weekModal);
+  closeModal(courseModal);
+});

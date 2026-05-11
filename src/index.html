@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的课程表</title>
-  <link rel="stylesheet" href="style.css?v=main-empty">
+  <link rel="stylesheet" href="style.css?v=course-modal-2">
 </head>
 <body>
   <main class="app-shell">
@@ -28,6 +28,61 @@
     </section>
   </main>
 
-  <script src="app.js?v=main-empty"></script>
+  <div class="modal-backdrop" id="course-modal" hidden>
+    <section class="course-editor" role="dialog" aria-modal="true" aria-labelledby="course-editor-title">
+      <header class="modal-header">
+        <button class="text-button" id="course-cancel" type="button">取消</button>
+        <h2 id="course-editor-title">添加课程</h2>
+        <button class="text-button accent" id="course-done" type="button">完成</button>
+      </header>
+
+      <form class="course-form">
+        <label class="form-row">
+          <span>课程名称</span>
+          <input id="course-name" type="text" placeholder="请输入添加的课程名称" autocomplete="off">
+        </label>
+
+        <button class="form-row link-row" id="open-week-picker" type="button">
+          <span>课程周期</span>
+          <strong id="week-summary">第 1-16 周</strong>
+        </button>
+
+        <button class="form-row link-row" type="button">
+          <span>课程节数</span>
+          <strong id="slot-summary">周一 第 1 节</strong>
+        </button>
+
+        <label class="form-row">
+          <span>教室地点</span>
+          <input id="course-room" type="text" placeholder="请输入教室地点" autocomplete="off">
+        </label>
+
+        <label class="form-row">
+          <span>任课老师</span>
+          <input id="course-teacher" type="text" placeholder="请输入任课老师" autocomplete="off">
+        </label>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="week-modal" hidden>
+    <section class="week-picker" role="dialog" aria-modal="true" aria-labelledby="week-picker-title">
+      <header class="modal-header">
+        <button class="text-button" id="week-cancel" type="button">取消</button>
+        <h2 id="week-picker-title">周数</h2>
+        <button class="text-button accent" id="week-done" type="button">完成</button>
+      </header>
+
+      <div class="week-mode-group" aria-label="周数选择模式">
+        <button class="week-mode" data-mode="odd" type="button"><span></span>单周</button>
+        <button class="week-mode" data-mode="even" type="button"><span></span>双周</button>
+        <button class="week-mode is-selected" data-mode="all" type="button"><span></span>全选</button>
+      </div>
+
+      <div class="week-grid" id="week-grid" aria-label="周数列表"></div>
+    </section>
+  </div>
+
+  <script src="app.js?v=course-modal-2"></script>
 </body>
 </html>

@@ -22,15 +22,29 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   min-width: 960px;
+  height: 100%;
+  overflow: hidden;
   color: var(--text);
-  background:
-    linear-gradient(180deg, #ffffff 0%, var(--bg) 72%),
-    var(--bg);
+  background: var(--bg);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Microsoft YaHei", sans-serif;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: url("assets/background.png") center / cover no-repeat;
+  content: "";
+  opacity: 0.8;
 }
 
 button {
@@ -38,9 +52,11 @@ button {
 }
 
 .app-shell {
-  width: min(1160px, calc(100vw - 96px));
+  width: min(880px, calc(100vw - 160px));
+  height: 100vh;
   margin: 0 auto;
   padding: 34px 0 44px;
+  overflow-y: auto;
 }
 
 .app-header {
@@ -119,7 +135,7 @@ h1 {
 
 .weekday-row {
   display: grid;
-  grid-template-columns: 86px repeat(7, minmax(104px, 1fr));
+  grid-template-columns: 76px repeat(7, minmax(86px, 1fr));
   border-bottom: 1px solid var(--line);
 }
 
@@ -168,7 +184,7 @@ h1 {
 
 .schedule-grid {
   display: grid;
-  grid-template-columns: 86px repeat(7, minmax(104px, 1fr));
+  grid-template-columns: 76px repeat(7, minmax(86px, 1fr));
 }
 
 .time-axis {
@@ -176,7 +192,7 @@ h1 {
   flex-direction: column;
   justify-content: flex-start;
   min-height: 116px;
-  padding: 18px 8px 14px 24px;
+  padding: 18px 8px 14px 20px;
   color: #56595d;
   background: transparent;
   border: 0;
@@ -205,11 +221,21 @@ h1 {
   min-height: 116px;
   padding: 9px 7px;
   border-bottom: 2px dashed var(--dash);
-  transition: background 0.18s ease;
 }
 
-.schedule-slot:hover {
+.schedule-slot::before {
+  position: absolute;
+  inset: 9px 7px;
   background: #f0f2f4;
+  border-radius: 8px;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease;
+}
+
+.schedule-slot:hover::before {
+  opacity: 1;
 }
 
 .schedule-slot::after {
@@ -219,25 +245,19 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  color: #2d2f33;
-  font-size: 30px;
-  font-weight: 500;
+  color: #4f555c;
+  font-size: 34px;
+  font-weight: 400;
   line-height: 1;
-  background: #ffffff;
-  border: 1px dashed transparent;
-  border-radius: 50%;
   content: "";
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, -50%);
-  transition: opacity 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  transition: opacity 0.16s ease;
+  z-index: 1;
 }
 
 .schedule-slot:hover::after {
-  border-color: #8f969e;
-  box-shadow: 0 8px 18px rgba(35, 39, 47, 0.16);
   content: "+";
   opacity: 1;
 }
@@ -323,6 +343,197 @@ h1 {
   background: rgba(182, 90, 108, 0.2);
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 38px;
+  background: rgba(24, 27, 31, 0.28);
+  backdrop-filter: blur(5px);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.course-editor,
+.week-picker {
+  width: min(760px, calc(100vw - 120px));
+  max-height: calc(100vh - 76px);
+  overflow-y: auto;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 28px 90px rgba(18, 22, 28, 0.24);
+}
+
+.course-editor {
+  padding: 0 34px 18px;
+}
+
+.modal-header {
+  display: grid;
+  grid-template-columns: 96px 1fr 96px;
+  align-items: center;
+  min-height: 82px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #2d2f33;
+  font-size: 25px;
+  font-weight: 780;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.text-button {
+  padding: 0;
+  color: #6a6f75;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 680;
+  text-align: left;
+}
+
+.text-button.accent {
+  color: #5285ef;
+  text-align: right;
+}
+
+.course-form {
+  border-top: 1px solid var(--line);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  min-height: 88px;
+  padding: 0;
+  color: #2d2f33;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.form-row span {
+  font-size: 25px;
+  font-weight: 780;
+}
+
+.form-row input,
+.link-row strong {
+  width: 100%;
+  color: #5f6369;
+  font-size: 22px;
+  font-weight: 520;
+  text-align: right;
+}
+
+.form-row input {
+  height: 52px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+
+.form-row input::placeholder {
+  color: #cfd2d6;
+}
+
+.link-row {
+  cursor: pointer;
+}
+
+.link-row strong::after {
+  margin-left: 16px;
+  color: #9ba0a6;
+  content: ">";
+}
+
+.week-picker {
+  padding: 0 42px 42px;
+}
+
+.week-mode-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 62px;
+  padding: 20px 0 42px;
+}
+
+.week-mode {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #8f9398;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 720;
+}
+
+.week-mode span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 2px solid #d8dadd;
+  border-radius: 50%;
+}
+
+.week-mode.is-selected {
+  color: #767b82;
+}
+
+.week-mode.is-selected span {
+  color: #ffffff;
+  background: #5285ef;
+  border-color: #5285ef;
+}
+
+.week-mode.is-selected span::after {
+  width: 14px;
+  height: 8px;
+  border-bottom: 4px solid #ffffff;
+  border-left: 4px solid #ffffff;
+  content: "";
+  transform: translateY(-2px) rotate(-45deg);
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px 22px;
+}
+
+.week-item {
+  height: 70px;
+  color: #ffffff;
+  background: #5786f2;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.week-item:not(.is-selected) {
+  color: #80858c;
+  background: #eef0f3;
+}
+
 @media (max-width: 1180px) {
   body {
     min-width: 900px;
@@ -340,5 +551,10 @@ h1 {
   .time-axis,
   .schedule-slot {
     min-height: 108px;
+  }
+
+  .course-editor,
+  .week-picker {
+    width: min(720px, calc(100vw - 64px));
   }
 }
