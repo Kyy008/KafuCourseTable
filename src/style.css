@@ -1252,3 +1252,313 @@ h1 {
     width: min(720px, calc(100vw - 64px));
   }
 }
+
+@media (max-width: 900px) {
+  html {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  body {
+    min-width: 0;
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .app-shell {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    padding: 24px 14px 32px;
+    overflow: visible;
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  h1 {
+    font-size: 30px;
+  }
+
+  .header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .ghost-button,
+  .primary-button {
+    width: 100%;
+    min-width: 0;
+    padding: 0 12px;
+    white-space: nowrap;
+  }
+
+  .week-panel {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .week-panel::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .week-panel::-webkit-scrollbar-thumb {
+    background: rgba(80, 86, 94, 0.22);
+    border-radius: 999px;
+  }
+
+  .schedule-board {
+    width: 900px;
+    min-width: 900px;
+  }
+
+  .weekday-row,
+  .schedule-grid {
+    grid-template-columns: 82px repeat(7, minmax(104px, 1fr));
+  }
+
+  .month-cell,
+  .time-axis {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    background: var(--surface);
+  }
+
+  .month-cell {
+    box-shadow: 1px 0 0 var(--line);
+  }
+
+  .time-axis {
+    box-shadow: 1px 0 0 var(--dash);
+  }
+
+  .schedule-slot {
+    min-height: 112px;
+  }
+
+  .course-card {
+    height: 112px;
+  }
+
+  .course-delete {
+    opacity: 1;
+  }
+
+  .modal-backdrop {
+    align-items: center;
+    padding: 12px;
+  }
+
+  .course-editor,
+  .week-picker {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    border-radius: 14px;
+  }
+
+  .confirm-dialog {
+    width: calc(100vw - 32px);
+  }
+}
+
+@media (hover: none) and (max-width: 900px) {
+  .schedule-slot:not(.has-course)::before {
+    opacity: 0.55;
+  }
+
+  .schedule-slot:not(.has-course)::after {
+    content: "+";
+    opacity: 0.22;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    padding: 18px 12px 28px;
+  }
+
+  .app-header {
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .ghost-button,
+  .primary-button {
+    height: 42px;
+    padding: 0 8px;
+    font-size: 14px;
+  }
+
+  .schedule-board {
+    width: 880px;
+    min-width: 880px;
+  }
+
+  .modal-backdrop {
+    padding: 10px;
+  }
+
+  .course-editor,
+  .week-picker {
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+  }
+
+  .course-editor {
+    padding: 0 18px 18px;
+  }
+
+  .query-panel {
+    padding-bottom: 22px;
+  }
+
+  .modal-header {
+    grid-template-columns: 64px minmax(0, 1fr) 64px;
+    min-height: 64px;
+  }
+
+  .modal-header h2 {
+    font-size: 20px;
+  }
+
+  .text-button {
+    font-size: 16px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 8px;
+    min-height: auto;
+    padding: 16px 0;
+  }
+
+  .form-row span,
+  .day-query-heading span {
+    font-size: 20px;
+  }
+
+  .form-row input,
+  .link-row strong {
+    height: auto;
+    min-height: 34px;
+    font-size: 17px;
+    text-align: left;
+  }
+
+  .link-row strong::after {
+    margin-left: 8px;
+  }
+
+  .week-mode-group {
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 16px 0 24px;
+  }
+
+  .week-mode {
+    gap: 8px;
+    font-size: 17px;
+  }
+
+  .week-mode span {
+    width: 28px;
+    height: 28px;
+  }
+
+  .week-grid {
+    gap: 10px;
+  }
+
+  .week-item {
+    height: 52px;
+    border-radius: 8px;
+    font-size: 18px;
+  }
+
+  .query-results {
+    gap: 10px;
+    padding-top: 14px;
+  }
+
+  .query-empty {
+    padding: 20px 14px;
+    font-size: 14px;
+  }
+
+  .query-result-card {
+    padding: 14px 14px 13px;
+  }
+
+  .query-result-card h3 {
+    font-size: 16px;
+  }
+
+  .query-result-meta,
+  .query-result-detail {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .day-query-block {
+    padding: 18px 0 20px;
+  }
+
+  .day-query-week-control {
+    grid-template-columns: 32px minmax(96px, auto) 32px;
+    gap: 8px;
+  }
+
+  .day-query-week-control strong {
+    min-width: 96px;
+    font-size: 18px;
+  }
+
+  .day-query-week-step {
+    width: 30px;
+    height: 30px;
+    font-size: 24px;
+  }
+
+  .day-query-date {
+    margin-bottom: 16px;
+    font-size: 15px;
+  }
+
+  .day-query-days {
+    gap: 6px;
+  }
+
+  .day-query-day {
+    height: 42px;
+    border-radius: 8px;
+    font-size: 17px;
+  }
+
+  .confirm-dialog {
+    width: calc(100vw - 24px);
+    padding: 26px 22px 22px;
+  }
+}
