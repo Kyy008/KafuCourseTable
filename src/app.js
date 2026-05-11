@@ -69,6 +69,7 @@ const courseColors = Array.from({ length: 15 }, (_, index) => `card-${index + 1}
 const courses = loadCourses();
 let currentWeek = initialWeek;
 let activeSlot = { day: 1, period: 1 };
+// 为空时表示新增课程；有值时表示正在编辑对应 id 的课程。
 let editingCourseId = "";
 let draggingCourseId = "";
 let pendingDeleteCourseId = "";
@@ -76,6 +77,7 @@ let scheduleAnimationTimer = 0;
 let selectedDayQueryDay = weekdays.find((weekday) => weekday.active)?.day || 1;
 let selectedDayQueryWeek = currentWeek;
 
+// 对本地存储中的旧数据做兜底整理，避免缺字段或格式变化导致渲染失败。
 function normalizeCourse(course) {
   const weeks = getCourseWeeks(course);
 
@@ -137,6 +139,7 @@ function getAllWeeks() {
   return Array.from({ length: totalWeeks }, (_, index) => index + 1);
 }
 
+// 周数统一转成去重、排序、合法范围内的数字数组，供渲染和查询复用。
 function normalizeWeeks(weeks) {
   return [...new Set(weeks
     .map((week) => Number(week))
@@ -203,6 +206,7 @@ function isCourseVisibleInCurrentWeek(course) {
   return course.weeks.includes(currentWeek);
 }
 
+// 通过学期开始日期推算当前教学周每天的真实日期。
 function getWeekDates(week) {
   return weekdays.map((weekday) => {
     const date = new Date(semesterStartDate);
@@ -432,6 +436,7 @@ function openModal(modal, sourceElement) {
     return;
   }
 
+  // 根据触发元素的位置设置弹窗起点，实现从课程格展开的动画。
   void modal.offsetWidth;
   modal.classList.add("modal-fade-in");
 
@@ -565,6 +570,7 @@ function openCourseEditor(day, period, sourceElement) {
   courseNameInput.focus();
 }
 
+// 修改课程时复用添加表单，只切换标题、按钮文案并预填课程数据。
 function openCourseEditorForCourse(courseId, sourceElement) {
   const course = courses.find((item) => item.id === courseId);
 
@@ -721,6 +727,7 @@ function createSlot(day, period) {
   slot.className = "schedule-slot";
   slot.dataset.day = day;
   slot.dataset.period = period;
+  // 只渲染当前周应该出现的课程，同一课程可跨多个教学周复用。
   const slotCourses = courses.filter((course) => {
     return course.day === day && course.period === period && isCourseVisibleInCurrentWeek(course);
   });
@@ -813,6 +820,7 @@ weekNextButton.addEventListener("click", () => switchWeek("next"));
 openCourseQueryButton.addEventListener("click", openCourseQuery);
 openDayQueryButton.addEventListener("click", openDayQuery);
 
+// 使用事件委托处理课程表点击：空格子新增，已有卡片编辑。
 scheduleGrid.addEventListener("click", (event) => {
   if (event.target.closest(".course-delete")) {
     return;
@@ -869,6 +877,7 @@ scheduleGrid.addEventListener("dragover", (event) => {
     return;
   }
 
+  // dragover 必须阻止默认行为，否则浏览器不会触发 drop。
   event.preventDefault();
   event.dataTransfer.dropEffect = "move";
   scheduleGrid.querySelectorAll(".drag-over").forEach((item) => {
@@ -910,6 +919,7 @@ scheduleGrid.addEventListener("drop", (event) => {
   const course = courses.find((item) => item.id === courseId);
 
   if (course) {
+    // 拖拽只改变课程所在的星期和节次，课程名称、老师、周数等信息保持不变。
     course.day = Number(slot.dataset.day);
     course.period = Number(slot.dataset.period);
     saveCourses();
@@ -945,6 +955,7 @@ courseDoneButton.addEventListener("click", () => {
   const courseName = courseNameInput.value.trim() || "未命名课程";
   const editedCourse = courses.find((course) => course.id === editingCourseId);
 
+  // 有 editingCourseId 时保存修改，否则按当前选中的空格子新增课程。
   if (editedCourse) {
     editedCourse.name = courseName;
     editedCourse.teacher = courseTeacherInput.value.trim();

@@ -38,6 +38,7 @@ body {
     "Microsoft YaHei", sans-serif;
 }
 
+/* 背景图用伪元素承载，避免影响页面主体滚动和布局层级。 */
 body::before {
   position: fixed;
   inset: 0;
@@ -114,6 +115,7 @@ h1 {
   background: var(--active);
 }
 
+/* 课程表主体：周数栏、星期日期栏和节次网格共用同一列宽。 */
 .week-panel {
   overflow: hidden;
   border: 1px solid var(--line);
@@ -345,6 +347,7 @@ h1 {
   --drop-border-strong: #6f879e;
 }
 
+/* 空课程格的加号提示由伪元素绘制，真实 DOM 只保留课程卡片。 */
 .schedule-slot::before {
   position: absolute;
   inset: 9px 7px;
@@ -401,6 +404,7 @@ h1 {
   opacity: 0;
 }
 
+/* 拖拽经过时用双层脉冲边框提示可放置区域。 */
 .schedule-slot.drag-over .drop-pulse {
   position: absolute;
   inset: 9px 7px;
@@ -773,6 +777,7 @@ h1 {
   --card-border: #d3af8f;
 }
 
+/* 所有弹窗共用遮罩层，具体内容由课程编辑、周数选择、确认框分别承载。 */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1233,6 +1238,7 @@ h1 {
   background: #eef0f3;
 }
 
+/* 中等屏幕先收紧主体和网格列宽，避免课程格过早溢出。 */
 @media (max-width: 1180px) {
   body {
     min-width: 900px;
@@ -1258,6 +1264,7 @@ h1 {
   }
 }
 
+/* 小屏幕保留课程表横向浏览能力，左侧时间轴使用 sticky 保持可读。 */
 @media (max-width: 900px) {
   html {
     height: auto;
@@ -1376,6 +1383,7 @@ h1 {
   }
 }
 
+/* 触屏设备没有 hover，所以直接露出空格子的添加提示。 */
 @media (hover: none) and (max-width: 900px) {
   .schedule-slot:not(.has-course)::before {
     opacity: 0.55;
@@ -1387,6 +1395,7 @@ h1 {
   }
 }
 
+/* 窄屏下弹窗表单改为单列，保证输入内容不被挤压。 */
 @media (max-width: 600px) {
   .app-shell {
     padding: 18px 12px 28px;

@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="style.css?v=edit-course">
 </head>
 <body>
+  <!-- 主界面：顶部操作区和一周课程表。 -->
   <main class="app-shell">
     <header class="app-header">
       <div>
@@ -33,6 +34,7 @@
     </section>
   </main>
 
+  <!-- 添加 / 修改课程共用同一个弹窗，由 app.js 根据状态切换标题和保存逻辑。 -->
   <div class="modal-backdrop" id="course-modal" hidden>
     <section class="course-editor" role="dialog" aria-modal="true" aria-labelledby="course-editor-title">
       <header class="modal-header">
@@ -65,6 +67,7 @@
     </section>
   </div>
 
+  <!-- 课程周期选择器，支持全选、单周、双周和手动勾选。 -->
   <div class="modal-backdrop" id="week-modal" hidden>
     <section class="week-picker" role="dialog" aria-modal="true" aria-labelledby="week-picker-title">
       <header class="modal-header">
@@ -83,6 +86,7 @@
     </section>
   </div>
 
+  <!-- 查询弹窗：按课程名称查询时间，或按周数和星期查询当日行程。 -->
   <div class="modal-backdrop" id="course-query-modal" hidden>
     <section class="course-editor query-panel" role="dialog" aria-modal="true" aria-labelledby="course-query-title">
       <header class="modal-header">
@@ -137,6 +141,7 @@
     </section>
   </div>
 
+  <!-- 删除课程前二次确认，防止误点课程卡片上的删除按钮。 -->
   <div class="modal-backdrop" id="delete-modal" hidden>
     <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title">
       <h2 id="delete-title">确认删除课程？</h2>
